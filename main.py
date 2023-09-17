@@ -36,10 +36,9 @@ async def on_ready():
         image = get_image()
         if image:
 
-            # image_path = 'O:\\Python Files\\Projects\\print-fail-detection\\fail_img.jpg'
             image_path = 'fail_img.jpg'
 
-            with open(image_path, 'rb') as image_file:
+            with open('current_view.jpg', 'rb') as image_file:
                 if counter % 60 == 0:
                     await log_channel.send(
                         embed=discord.Embed(

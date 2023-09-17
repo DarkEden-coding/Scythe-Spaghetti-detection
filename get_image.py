@@ -20,6 +20,9 @@ def get_image():
         image_data = BytesIO(response.content)
         img = Image.open(image_data)
 
+        # save the image to current_view.jpg
+        img.save("current_view.jpg")
+
         return img
     else:
         return False
