@@ -6,6 +6,9 @@ import numpy as np
 
 model = YOLO("runs/detect/spaghetti-detection-L7/weights/best.pt")
 
+if not os.path.exists("/fail_images"):
+    os.mkdir("/fail_images")
+
 
 def detect(image, min_conf):
     # convert image to grayscale
