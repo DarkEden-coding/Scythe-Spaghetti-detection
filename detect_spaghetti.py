@@ -37,11 +37,12 @@ def detect(image, min_conf):
 
     filename = "fail_img.jpg"
     counter = 0
-    while os.path.exists(f"/fail_images/{filename}"):
+    while os.path.exists(f"fail_images/{filename}"):
         counter += 1
-        filename = f"fail_img {counter}.jpg"
+        filename = f"fail_img({counter}).jpg"
 
-    cv2.imwrite(f"/fail_images/{filename}", cv2_image)
+    print(filename)
+    cv2.imwrite(f"fail_images/{filename}", cv2_image)
 
     if len(box_list) > 0:
         return box_list

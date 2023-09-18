@@ -49,7 +49,7 @@ async def on_ready():
                         file=discord.File(image_file),
                     )
 
-            boxes = detect(image, 0.6)
+            boxes = detect(image, 0.1)
             if boxes:
                 # pause()
 
