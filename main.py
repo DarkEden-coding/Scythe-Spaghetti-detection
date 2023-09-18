@@ -1,13 +1,12 @@
 print("Starting...")
 
 from detect_spaghetti import detect
-from time import sleep
 from get_image import get_image
 import discord
 import asyncio
+from time import time
 
 print("Imports complete.")
-
 
 intents = discord.Intents.default()
 intents.typing = False
@@ -25,7 +24,9 @@ async def on_ready():
     counter = 0
 
     while True:
-        if counter % 10 == 0:
+        start_time = time()
+
+        if counter % 3 == 0:
             await log_channel.send(
                 embed=discord.Embed(
                     title=f"Note: Monitoring for spaghetti. Has been running for {counter * 10} seconds.",
@@ -38,8 +39,8 @@ async def on_ready():
 
             image_path = 'fail_img.jpg'
 
-            with open('current_view.jpg', 'rb') as image_file:
-                if counter % 60 == 0:
+            if counter % 6 == 0:
+                with open('current_view.jpg', 'rb') as image_file:
                     await log_channel.send(
                         embed=discord.Embed(
                             title=f"Note: Status, current camera image attached.",
@@ -88,6 +89,10 @@ async def on_ready():
 
         counter += 1
 
-        await asyncio.sleep(1)
+        end_time = time()
+        loop_time = end_time - start_time
+
+        await asyncio.sleep(10 - loop_time)
+
 
 client.run(token)
