@@ -41,9 +41,7 @@ def detect(image, min_conf):
         counter += 1
         filename = f"fail_img({counter}).jpg"
 
-    print(filename)
-    cv2.imwrite(f"fail_images/{filename}", cv2_image)
-
     if len(box_list) > 0:
+        cv2.imwrite(f"fail_images/{filename}", cv2_image)
         return box_list
     return False
