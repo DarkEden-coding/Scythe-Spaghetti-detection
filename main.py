@@ -1,7 +1,7 @@
 print("Starting...")
 
-from time import time
-time.sleep(10)
+from time import time, sleep
+sleep(10)
 from detect_spaghetti import detect
 from get_image import get_image
 import discord
