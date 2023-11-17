@@ -6,6 +6,7 @@ from io import BytesIO
 # URL of the image
 image_url = "http://mainsailos.local//webcam/?action=snapshot"
 ip_image_url = "http://10.0.0.212//webcam/?action=snapshot"
+image_url = ip_image_url
 
 
 def get_image():
