@@ -4,7 +4,7 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 
-model = YOLO("runs/detect/spaghetti-detection-L7/weights/best.pt")
+model = YOLO("best.pt")
 
 if not os.path.exists("/fail_images"):
     os.mkdir("/fail_images")
@@ -25,8 +25,16 @@ def detect(image, min_conf):
         boxes = result.boxes
         for box in boxes:
             conf = round(box.conf[0].item(), 2)
+            class_num = box.cls[0].item()
+
+            print(f"Confidence: {conf}, Class: {class_num}\n")
+
+            if class_num != 0:
+                continue
+
             if conf < min_conf:
                 continue
+
             x1, y1, x2, y2 = int(box.xyxy[0][0].item()), int(box.xyxy[0][1].item()), int(box.xyxy[0][2].item()), int(box.xyxy[0][3].item())
             box_list.append((x1, y1, x2, y2, conf))
 
