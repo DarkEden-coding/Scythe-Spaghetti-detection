@@ -1,12 +1,8 @@
-from typing import Callable, Tuple, Any, Dict, Coroutine
-
-print("Starting...")
-
-from time import time, sleep
-sleep(10)
+from time import time
 from detect_spaghetti import detect
 from get_image import get_image
 import discord
+from settings import token
 import asyncio
 
 print("Imports complete.")
@@ -15,12 +11,11 @@ intents = discord.Intents.default()
 intents.typing = False
 intents.presences = False
 
-token = "MTE0MTIwNDkxMzc3OTY1MDY0Mg.Gn-S0F.l5L2ixsATG53GgJR9uWabhbLWvYwTGlxVNOsEc"
 client = discord.Client(intents=intents)
 
 
 async def main():
-    print(f'Logged in as {client.user.name}')
+    print(f"Logged in as {client.user.name}")
 
     log_channel = client.get_channel(1139710420471525527)
     counter = 0
@@ -38,14 +33,13 @@ async def main():
 
         image = get_image()
         if image:
-
-            image_path = 'fail_img.jpg'
+            image_path = "fail_img.jpg"
 
             if counter % 6 == 0:
-                with open('current_view.jpg', 'rb') as image_file:
+                with open("current_view.jpg", "rb") as image_file:
                     await log_channel.send(
                         embed=discord.Embed(
-                            title=f"Note: Status, current camera image attached.",
+                            title="Note: Status, current camera image attached.",
                             color=discord.Color.green(),
                         ),
                         file=discord.File(image_file),
@@ -55,7 +49,7 @@ async def main():
             if boxes:
                 # pause()
 
-                with open(image_path, 'rb') as image_file:
+                with open(image_path, "rb") as image_file:
                     fail_message = await log_channel.send(
                         embed=discord.Embed(
                             title="FATAL: Spaghetti detected!",
@@ -65,7 +59,7 @@ async def main():
                         file=discord.File(image_file),
                     )
 
-                await fail_message.add_reaction('👍')
+                await fail_message.add_reaction("👍")
 
                 message_id = fail_message.id
 
@@ -100,5 +94,6 @@ async def main():
 @client.event
 async def on_ready():
     await main()
+
 
 client.run(token)
