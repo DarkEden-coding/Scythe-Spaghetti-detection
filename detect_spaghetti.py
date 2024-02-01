@@ -35,11 +35,24 @@ def detect(image, min_conf):
             if conf < min_conf:
                 continue
 
-            x1, y1, x2, y2 = int(box.xyxy[0][0].item()), int(box.xyxy[0][1].item()), int(box.xyxy[0][2].item()), int(box.xyxy[0][3].item())
+            x1, y1, x2, y2 = (
+                int(box.xyxy[0][0].item()),
+                int(box.xyxy[0][1].item()),
+                int(box.xyxy[0][2].item()),
+                int(box.xyxy[0][3].item()),
+            )
             box_list.append((x1, y1, x2, y2, conf))
 
             cv2.rectangle(cv2_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(cv2_image, str(conf), (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            cv2.putText(
+                cv2_image,
+                str(conf),
+                (x1, y1),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0),
+                2,
+            )
 
     cv2.imwrite("fail_img.jpg", cv2_image)
 
