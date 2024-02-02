@@ -1,13 +1,4 @@
 from ultralytics import YOLO
-from roboflow import Roboflow
-from settings import roboflow_api_key
-
-# Initialize the Roboflow object with your API key
-rf = Roboflow(api_key=roboflow_api_key)
-
-# Specify the project for upload
-project = rf.project("3d-printing-fail-detection")
-version = project.version("6")
 
 
 def main():
@@ -31,15 +22,6 @@ def main():
     )
 
     print("Training complete.")
-    print("Uploading model...")
-
-    # Upload the model to your project
-    version.deploy(
-        "yolov8",
-        "runs/detect/spaghetti-detection-S1/",
-    )
-
-    print("Model uploaded.")
 
 
 if __name__ == "__main__":

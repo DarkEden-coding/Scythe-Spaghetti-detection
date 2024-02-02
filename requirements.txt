@@ -1,0 +1,9 @@
+discord~=2.3.2
+ultralytics==8.1.9
+selenium==4.17.2
+requests~=2.31.0
+Pillow==10.2.0
+opencv-python==4.9.0.80
+numpy==1.26.3
+keyboard~=0.13.5
+roboflow==1.1.19
