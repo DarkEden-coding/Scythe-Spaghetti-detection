@@ -13,6 +13,8 @@ intents.presences = False
 
 client = discord.Client(intents=intents)
 
+target_loop_time = 30
+
 
 async def main():
     print(f"Logged in as {client.user.name}")
@@ -23,7 +25,7 @@ async def main():
 
     await log_channel.send(
         embed=discord.Embed(
-            title="Note: Monitoring for spaghetti. Has been started.",
+            title=f"Note: Monitoring for spaghetti has been started. Target loop time: {target_loop_time} seconds.",
             color=discord.Color.green(),
         )
     )
@@ -96,7 +98,7 @@ async def main():
         loop_end_time = time()
         loop_time = loop_end_time - loop_start_time
 
-        await asyncio.sleep(30 - loop_time)
+        await asyncio.sleep(target_loop_time - loop_time)
 
 
 @client.event
