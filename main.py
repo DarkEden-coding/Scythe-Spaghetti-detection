@@ -2,7 +2,7 @@ from time import time
 from detect_spaghetti import detect
 from get_image import get_image
 import discord
-from settings import discord_bot_token
+from settings import discord_bot_token, discord_ping_userid
 import asyncio
 from io import BytesIO
 
@@ -58,7 +58,7 @@ async def main():
                     fail_message = await log_channel.send(
                         embed=discord.Embed(
                             title="FATAL: Spaghetti detected!",
-                            description="Print NOT automatically paused.",
+                            description=f"Print NOT automatically paused. Please check the printer. <@{discord_ping_userid}>",
                             color=discord.Color.red(),
                         ),
                         file=discord.File(image_file),
