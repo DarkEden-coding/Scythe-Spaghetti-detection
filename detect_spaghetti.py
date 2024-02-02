@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from time import time
 
-model = YOLO("best.pt")
+model = YOLO("largeModel.pt")
 
 if not os.path.exists("/fail_images"):
     os.mkdir("/fail_images")
