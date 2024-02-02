@@ -3,23 +3,14 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service as ChromeService
-import platform
 
 # Create ChromeOptions object and set headless mode
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 
-if platform.system() == "Windows":
-    driver = webdriver.Chrome(
-        service=ChromeService(executable_path="../chromedriver_win32/chromedriver.exe"),
-        options=chrome_options,
-    )
-else:
-    driver = webdriver.Chrome(
-        service=ChromeService(executable_path="../chromedriver_linux64/chromedriver"),
-        options=chrome_options,
-    )
+driver = webdriver.Chrome(
+    options=chrome_options,
+)
 
 wait = WebDriverWait(driver, 10)  # Wait up to 10 seconds
 
