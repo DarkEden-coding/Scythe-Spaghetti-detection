@@ -30,7 +30,7 @@ def detect(image, min_conf):
 
             print(f"Confidence: {conf}, Class: {class_num}\n")
 
-            if class_num != 0:
+            if class_num != 1:
                 continue
 
             if conf < min_conf:
