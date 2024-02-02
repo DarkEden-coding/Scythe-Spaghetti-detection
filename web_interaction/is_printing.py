@@ -14,7 +14,7 @@ driver = webdriver.Chrome(
     service=Service(executable_path='/usr/lib/chromium-browser/chromedriver')
 )
 
-wait = WebDriverWait(driver, 6)  # Wait up to 10 seconds
+wait = WebDriverWait(driver, 20)  # Wait up to 10 seconds
 
 driver.get("http://mainsailos.local")
 
