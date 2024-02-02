@@ -1,37 +1,10 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
+import requests
 
-
-# Create ChromeOptions object and set headless mode
-chrome_options = Options()
-chrome_options.add_argument("--headless")
-
-driver = webdriver.Chrome(
-    options=chrome_options,
-    service=Service(executable_path="/usr/lib/chromium-browser/chromedriver"),
-)
-
-wait = WebDriverWait(driver, 20)  # Wait up to 10 seconds
+url = "http://mainsailos.local/"
 
 
 def pause():
-    driver.get("http://mainsailos.local")
+    requests.post(url + "printer/print/pause")
 
-    # Wait for the pause button to appear
-    pause_button = wait.until(
-        EC.presence_of_element_located(
-            (
-                By.XPATH,
-                '//*[@id="page-container"]/div/div/div['
-                "1]/div[1]/div/header/div/div[3]/div/button",
-            )
-        )
-    )
 
-    pause_button.click()
-
-    driver.quit()
+pause()
