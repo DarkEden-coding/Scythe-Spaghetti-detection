@@ -9,7 +9,7 @@ chrome_options = Options()
 chrome_options.add_argument("--headless")
 
 driver = webdriver.Chrome(options=chrome_options)
-wait = WebDriverWait(driver, 20)  # Wait up to 10 seconds
+wait = WebDriverWait(driver, 10)  # Wait up to 10 seconds
 
 
 def pause():

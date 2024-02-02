@@ -1,6 +1,7 @@
 from time import time
 from detect_spaghetti import detect
-from get_image import get_image
+from web_interaction.get_image import get_image
+from web_interaction.is_printing import is_printing
 import discord
 from settings import discord_bot_token, discord_ping_userid
 import asyncio
@@ -62,7 +63,11 @@ async def main():
             # Rewind the BytesIO object to the beginning
             image_bytes.seek(0)
 
-            detection = detect(pil_image, 0.6)
+            if is_printing():
+                detection = detect(pil_image, 0.6)
+            else:
+                detection = False
+
             if detection:
                 with open("fail_img.jpg", "rb") as image_file:
                     fail_message = await log_channel.send(

@@ -1,4 +1,4 @@
-from get_image import get_image
+from web_interaction.get_image import get_image
 import keyboard
 from time import sleep
 from datetime import datetime
@@ -11,9 +11,8 @@ rf = Roboflow(api_key="dhaROl0WFgzpP000tC8o")
 project = rf.project("3d-printing-fail-detection")
 
 
-
 while True:
-    if keyboard.is_pressed(' '):
+    if keyboard.is_pressed(" "):
         print("Key pressed. Exiting the loop.")
         break
 
@@ -30,4 +29,4 @@ while True:
         # Upload the image to your project
         project.upload(f"training_data/{formatted_time.replace(':', '-')}.jpg")
 
-    sleep(.2)
+    sleep(0.2)
