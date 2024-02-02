@@ -7,3 +7,4 @@ opencv-python==4.9.0.80
 numpy==1.26.3
 keyboard~=0.13.5
 roboflow==1.1.19
+webdriver-manager==4.0.1
