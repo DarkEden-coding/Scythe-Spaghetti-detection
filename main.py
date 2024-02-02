@@ -34,9 +34,19 @@ async def main():
     while True:
         loop_start_time = time()
 
+        # string of the current run time, days, hours, and minutes
+        run_time = time() - start_time
+        days = run_time // (24 * 3600)
+        run_time = run_time % (24 * 3600)
+        hours = run_time // 3600
+        run_time %= 3600
+        minutes = run_time // 60
+        run_time %= 60
+        seconds = run_time
+
         await log_channel.send(
             embed=discord.Embed(
-                title=f"Note: Monitoring for spaghetti. Has been running for {round(time() - start_time)} seconds.",
+                title=f"Note: Monitoring for spaghetti. Has been running for {int(days)} days, {int(hours)} hours, {int(minutes)} minutes, and {int(seconds)} seconds.",
                 color=discord.Color.green(),
             )
         )
