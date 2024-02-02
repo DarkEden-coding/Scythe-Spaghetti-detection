@@ -4,6 +4,7 @@ from get_image import get_image
 import discord
 from settings import discord_bot_token
 import asyncio
+from io import BytesIO
 
 print("Imports complete.")
 
