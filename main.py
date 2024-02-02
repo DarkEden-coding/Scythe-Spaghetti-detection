@@ -2,7 +2,7 @@ from time import time
 from detect_spaghetti import detect
 from get_image import get_image
 import discord
-from settings import token
+from settings import discord_bot_token
 import asyncio
 
 print("Imports complete.")
@@ -96,4 +96,4 @@ async def on_ready():
     await main()
 
 
-client.run(token)
+client.run(discord_bot_token)

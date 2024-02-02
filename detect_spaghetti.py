@@ -1,8 +1,8 @@
 import os.path
-
 from ultralytics import YOLO
 import cv2
 import numpy as np
+from time import time
 
 model = YOLO("best.pt")
 
@@ -11,8 +11,9 @@ if not os.path.exists("/fail_images"):
 
 
 def detect(image, min_conf):
-    # convert image to grayscale
+    start_time = time()
 
+    # convert image to grayscale
     image = image.convert("L")
 
     results = model(source=image, save=True, save_conf=True, show=False, conf=min_conf)
@@ -64,5 +65,8 @@ def detect(image, min_conf):
 
     if len(box_list) > 0:
         cv2.imwrite(f"fail_images/{filename}", cv2_image)
+        print(f"Detection took {round(time() - start_time, 2)} seconds.")
         return box_list
+
+    print(f"Detection took {round(time() - start_time, 2)} seconds.")
     return False
