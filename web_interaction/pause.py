@@ -12,7 +12,7 @@ chrome_options.add_argument("--headless")
 
 driver = webdriver.Chrome(
     options=chrome_options,
-    service=Service(executable_path='/usr/lib/chromium-browser/chromedriver')
+    service=Service(executable_path="/usr/lib/chromium-browser/chromedriver"),
 )
 
 wait = WebDriverWait(driver, 10)  # Wait up to 10 seconds
