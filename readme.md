@@ -3,6 +3,7 @@
 Hello, thanks for checking out my project! This is a **simple and lightweight** *OPEN SOURCE* and *SELF HOSTED* 3D printer fail detection project. It is entirely based in Python and currently uses the **YOLOv8 object detection framework**. The project currently has the large model trained. If needed, I will try to train models for other sizes suitable for less powerful devices such as the Raspi-Zero. This project is in its early stages and is not yet ready for production use, so keep that in mind.
 
 ## Features:
+- [x] **Supports any moonraker supported 3d printer**
 - [x] **3D Printer Fail Detection**
 - [x] **Discord Notifications and Status Updates**
 - [x] **Lightweight and Easy to Use**
@@ -43,3 +44,5 @@ If you would like to contribute to the project, feel free to make a pull request
 - [My Discord](https://discord.gg/users/806281289040396288)
 - [YOLOv8](https://docs.ultralytics.com/)
 - [Roboflow Dataset](https://universe.roboflow.com/dark-eden-nuheg/3d-printing-fail-detection)
+# Notes:
+If you are a large company looking into using this software please contact me through email about possable modification to better suit your location and system.
