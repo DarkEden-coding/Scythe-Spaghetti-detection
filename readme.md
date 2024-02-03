@@ -44,6 +44,8 @@ to check the status of the bot use ```> systemctl status your-service-name```
 <br />
 ### fail: <br />
 ![Alt text](readme_images/fail.png?raw=true "Fail Message")
+## Defenetly 3d printer spaghetti, trust :) <br />
+![Alt text](readme images/Screenshot 2024-02-03 at 1.58.17 PM.png?raw=true "The Spaghett")
 
 
 ## Contributing:
