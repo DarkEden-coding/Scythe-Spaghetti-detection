@@ -3,7 +3,17 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 from time import time
-from settings import use_cuda
+try:
+    from settings import (
+        use_cuda
+    )
+except ImportError:
+    print(
+        "\033[91mSettings file not found. Using template settings. !!!MAKE SURE IT IS UPDATED!!!\033[0m"
+    )
+    from template_settings import (
+        use_cuda
+    )
 
 device = 0 if use_cuda else "cpu"
 

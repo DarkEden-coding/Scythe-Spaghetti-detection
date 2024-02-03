@@ -4,15 +4,28 @@ from web_interaction.get_image import get_image
 from web_interaction.is_printing import is_printing
 from web_interaction.pause_print import pause
 import discord
-from settings import (
-    discord_bot_token,
-    discord_ping_userid,
-    discord_log_channel_id,
-    target_loop_time,
-    pause_on_spaghetti,
-)
 import asyncio
 from io import BytesIO
+
+try:
+    from settings import (
+        discord_bot_token,
+        discord_ping_userid,
+        discord_log_channel_id,
+        target_loop_time,
+        pause_on_spaghetti,
+    )
+except ImportError:
+    print(
+        "\033[91mSettings file not found. Using template settings. !!!MAKE SURE IT IS UPDATED!!!\033[0m"
+    )
+    from template_settings import (
+        discord_bot_token,
+        discord_ping_userid,
+        discord_log_channel_id,
+        target_loop_time,
+        pause_on_spaghetti,
+    )
 
 print("Imports complete.")
 
