@@ -9,7 +9,7 @@ from settings import (
     discord_ping_userid,
     discord_log_channel_id,
     target_loop_time,
-    pause_on_spaghetti
+    pause_on_spaghetti,
 )
 import asyncio
 from io import BytesIO
