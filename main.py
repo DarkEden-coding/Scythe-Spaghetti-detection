@@ -2,12 +2,14 @@ from time import time
 from detect_spaghetti import detect
 from web_interaction.get_image import get_image
 from web_interaction.is_printing import is_printing
+from web_interaction.pause_print import pause
 import discord
 from settings import (
     discord_bot_token,
     discord_ping_userid,
     discord_log_channel_id,
     target_loop_time,
+    pause_on_spaghetti
 )
 import asyncio
 from io import BytesIO
@@ -72,11 +74,16 @@ async def main():
                 detection = False
 
             if detection:
+                description = f"Print NOT automatically paused. Please check the printer. <@{discord_ping_userid}>"
+                if pause_on_spaghetti:
+                    pause()
+                    description = f"Print automatically paused. Please check the printer. <@{discord_ping_userid}>"
+
                 with open("fail_img.jpg", "rb") as image_file:
                     fail_message = await log_channel.send(
                         embed=discord.Embed(
                             title="FATAL: Spaghetti detected!",
-                            description=f"Print NOT automatically paused. Please check the printer. <@{discord_ping_userid}>",
+                            description=description,
                             color=discord.Color.red(),
                         ),
                         file=discord.File(image_file),

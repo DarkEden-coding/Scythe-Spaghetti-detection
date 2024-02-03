@@ -37,6 +37,14 @@ to get the bot token, follow this guide: https://discordpy.readthedocs.io/en/sta
 <br /><br />
 to check the status of the bot use ```> systemctl status your-service-name```
 
+## Discord Message UI:
+### status: <br />
+![Alt text](readme_images/status.png?raw=true "Status Message")
+<br />
+### fail: <br />
+![Alt text](readme_images/fail.png?raw=true "Fail Message")
+
+
 ## Contributing:
 If you would like to contribute to the project, feel free to make a pull request. I will review it and merge it if it is suitable. If you have any questions, feel free to reach out to me on discord: `scytheeden` or email me at `darkedenc9@gmail.com`. If anyone is willing to "donate" gpu time to train new models that would be greatly appreciated.
 # Relevant Links:
