@@ -40,12 +40,12 @@ to check the status of the bot use ```> systemctl status your-service-name```
 
 ## Discord Message UI:
 ### status: <br />
-![Alt text](readme_images/status.png?raw=true "Status Message")
+![Alt text](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/blob/master/readme_images/status.png?raw=true "Status Message")
 <br />
 ### fail: <br />
-![Alt text](readme_images/fail.png?raw=true "Fail Message")
+![Alt text](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/blob/master/readme_images/fail.png?raw=true "Fail Message")
 ## Defenetly 3d printer spaghetti, trust :) <br />
-![Alt text](readme images/Screenshot 2024-02-03 at 1.58.17 PM.png?raw=true "The Spaghett")
+![Alt text](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/blob/master/readme_images/Screenshot%202024-02-03%20at%201.58.17%20PM.png?raw=true "The Spaghett")
 
 
 ## Contributing:
