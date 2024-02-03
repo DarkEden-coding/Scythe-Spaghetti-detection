@@ -3,6 +3,9 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 from time import time
+from settings import use_cuda
+
+device = 0 if use_cuda else "cpu"
 
 model = YOLO("largeModel.pt")
 
@@ -16,7 +19,14 @@ def detect(image, min_conf):
     # convert image to grayscale
     image = image.convert("L")
 
-    results = model(source=image, save=True, save_conf=True, show=False, conf=min_conf)
+    results = model(
+        source=image,
+        save=True,
+        save_conf=True,
+        show=False,
+        conf=min_conf,
+        device=device,
+    )
 
     box_list = []
 

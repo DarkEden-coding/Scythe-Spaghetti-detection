@@ -1,10 +1,9 @@
 import requests
-
-url = "http://mainsailos.local/"
+from settings import printer_url
 
 
 def pause():
-    requests.post(url + "printer/print/pause")
+    requests.post(printer_url + "printer/print/pause")
 
 
 pause()

@@ -3,7 +3,12 @@ from detect_spaghetti import detect
 from web_interaction.get_image import get_image
 from web_interaction.is_printing import is_printing
 import discord
-from settings import discord_bot_token, discord_ping_userid
+from settings import (
+    discord_bot_token,
+    discord_ping_userid,
+    discord_log_channel_id,
+    target_loop_time,
+)
 import asyncio
 from io import BytesIO
 
@@ -15,13 +20,11 @@ intents.presences = False
 
 client = discord.Client(intents=intents)
 
-target_loop_time = 30
-
 
 async def main():
     print(f"Logged in as {client.user.name}")
 
-    log_channel = client.get_channel(1139710420471525527)
+    log_channel = client.get_channel(discord_log_channel_id)
 
     start_time = time()
 

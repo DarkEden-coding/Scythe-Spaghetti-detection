@@ -1,10 +1,9 @@
 import requests
-
-url = "http://mainsailos.local/"
+from settings import printer_url
 
 
 def is_printing():
-    response = requests.get(url + "printer/objects/query?print_stats")
+    response = requests.get(printer_url + "printer/objects/query?print_stats")
 
     return (
         "printing"
