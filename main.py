@@ -17,7 +17,7 @@ try:
     )
 except ImportError:
     print(
-        "\033[91mSettings file not found. Using template settings. !!!MAKE SURE IT IS UPDATED!!!\033[0m"
+        "\033[91mWARNING:   Settings file not found. Using template settings. !!!MAKE SURE IT IS UPDATED!!!\033[0m"
     )
     from template_settings import (
         discord_bot_token,
