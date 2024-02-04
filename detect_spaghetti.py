@@ -4,17 +4,20 @@ import cv2
 import numpy as np
 from time import time
 
-try:
-    from settings import use_cuda
-except ImportError:
-    print(
-        "\033[91mSettings file not found. Using template settings. !!!MAKE SURE IT IS UPDATED!!!\033[0m"
-    )
-    from template_settings import use_cuda
+if not os.path.exists("settings.py"):
+    print("settings.py not found. Please run settings_ui.py first.")
+    exit()
+
+from settings import use_cuda
+
 
 device = 0 if use_cuda else "cpu"
 
+print("Loading YOLO model...")
+
 model = YOLO("largeModel.pt")
+
+print("YOLO model loaded.")
 
 if not os.path.exists("/fail_images"):
     os.mkdir("/fail_images")
