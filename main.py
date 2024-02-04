@@ -6,26 +6,19 @@ from web_interaction.pause_print import pause
 import discord
 import asyncio
 from io import BytesIO
+import os
 
-try:
-    from settings import (
-        discord_bot_token,
-        discord_ping_userid,
-        discord_log_channel_id,
-        target_loop_time,
-        pause_on_spaghetti,
-    )
-except ImportError:
-    print(
-        "\033[91mWARNING:   Settings file not found. Using template settings. !!!MAKE SURE IT IS UPDATED!!!\033[0m"
-    )
-    from template_settings import (
-        discord_bot_token,
-        discord_ping_userid,
-        discord_log_channel_id,
-        target_loop_time,
-        pause_on_spaghetti,
-    )
+if not os.path.exists("settings.py"):
+    print("settings.py not found. Please run settings_ui.py first.")
+    exit()
+
+from settings import (
+    discord_bot_token,
+    discord_ping_userid,
+    discord_log_channel_id,
+    target_loop_time,
+    pause_on_spaghetti,
+)
 
 print("Imports complete.")
 

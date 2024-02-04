@@ -27,9 +27,10 @@ Hello, thanks for checking out my project! This is a **simple and lightweight** 
 ```> pip install -r requirements.txt```
 
 ## Configuration:
-1. Open the `template_settings.py` file and fill in the required fields, then save/rename it as `settings.py` <br />
-to get the bot token, follow this guide: https://discordpy.readthedocs.io/en/stable/discord.html
-2. To get the discord channel id and user id enable developer mode (settings -> advanced -> dev mode) in discord and right click the channel/user and click "copy id"
+1. To configure your settings run settings.py <br />
+```> python3 settings.py``` follow the on screen instructions to configure the settings
+2. to get the bot token, follow this guide: https://discordpy.readthedocs.io/en/stable/discord.html
+3. To get the discord channel id and user id enable developer mode (settings -> advanced -> dev mode) in discord and right click the channel/user and click "copy id"
 
 ## Usage:
 1. Run the `main.py` file <br />

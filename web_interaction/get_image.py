@@ -15,7 +15,9 @@ for webcam in webcam_list:
         snapshot_url = webcam["snapshot_url"]
         break
 if not snapshot_url:
-    raise ValueError(f"Webcam '{webcam_name}' not found, the name is case sensitive")
+    raise ValueError(
+        f"Webcam '{webcam_name}' not found, the name is case sensitive, available webcams: {webcam_list}"
+    )
 
 
 def get_image():
