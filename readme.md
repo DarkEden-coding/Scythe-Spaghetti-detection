@@ -1,6 +1,6 @@
 # Scythe Spaghetti Detection Introduction
 
-Hello, thanks for checking out my project! This is a **simple and lightweight** *OPEN SOURCE* and *SELF HOSTED* 3D printer fail detection project. It is entirely based in Python and currently uses the **YOLOv8 object detection framework**. The project currently has the large model trained. If needed, I will try to train models for other sizes suitable for less powerful devices such as the Raspi-Zero. This project is in its early stages and is not yet ready for production use, so keep that in mind.
+Hello, thanks for checking out my project! This is a **simple and lightweight** *OPEN SOURCE* and *SELF-HOSTED* 3D printer fail detection project. It is entirely based in Python and currently uses the **YOLOv8 object detection framework**. The project currently has a large model trained. If needed, I will try to train models for other sizes suitable for less powerful devices such as the Raspi-Zero. This project is in its early stages and is not yet ready for production use, so keep that in mind. If you find any issues please make an issue or pull request, any showcase of your usage of this project is would be greatly appreciated, you can contact me using the info below.
 
 ## Features:
 - [x] **Supports any moonraker supported 3d printer**
@@ -40,10 +40,12 @@ to check the status of the bot use ```> systemctl status your-service-name```
 
 ## Discord Message UI:
 ### status: <br />
-![Alt text](readme_images/status.png?raw=true "Status Message")
+![Alt text](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/blob/master/readme_images/status.png?raw=true "Status Message")
 <br />
 ### fail: <br />
-![Alt text](readme_images/fail.png?raw=true "Fail Message")
+![Alt text](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/blob/master/readme_images/fail.png?raw=true "Fail Message")
+## Defenetly 3d printer spaghetti, trust :) <br />
+![Alt text](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/blob/master/readme_images/Screenshot%202024-02-03%20at%201.58.17%20PM.png?raw=true "The Spaghett")
 
 
 ## Contributing:
