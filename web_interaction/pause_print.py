@@ -1,6 +1,6 @@
 import requests
 from settings import printer_url
-from is_printing import is_printing
+from web_interaction.is_printing import is_printing
 
 
 def pause():
