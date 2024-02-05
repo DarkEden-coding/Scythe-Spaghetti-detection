@@ -12,7 +12,7 @@ def check_for_updates():
 
         # Run 'git status' to check the status of the local repository
         status_result = subprocess.run(
-            ["git", "status"], capture_output=True, text=True
+            [git_command, "status"], capture_output=True, text=True
         )
         print(status_result.stdout)
 
@@ -37,3 +37,7 @@ def check_for_updates():
 
     except Exception as e:
         print(f"An error occurred: {e}")
+
+
+if __name__ == "__main__":
+    check_for_updates()
