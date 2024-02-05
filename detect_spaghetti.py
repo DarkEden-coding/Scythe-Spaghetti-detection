@@ -29,6 +29,9 @@ def detect(image, min_conf):
     # convert image to grayscale
     image = image.convert("L")
 
+    # resize image to 640x640
+    image = image.resize((640, 640))
+
     results = model(
         source=image,
         save=True,

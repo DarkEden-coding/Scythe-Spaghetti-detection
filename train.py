@@ -5,18 +5,18 @@ def main():
     print("Loading model...")
 
     # Load the model.
-    model = YOLO("yolov8s.pt")  # change to last trained model
+    model = YOLO("largeModel.pt")  # change to last trained model
 
     print("Model loaded.")
     print("Starting training...")
 
     # Training.
     model.train(
-        data="3d printing fail detection.v6i.yolov8/data.yaml",  # change dataset path
+        data="3d printing fail detection.v7i.yolov8/data.yaml",  # change dataset path
         imgsz=640,
         epochs=180,
         batch=-1,
-        name="spaghetti-detection-S1",  # change to new model name
+        name="spaghetti-detection-L14",  # change to new model name
         cache=True,
         device=0,  # 0 is the first GPU, remove this line to use CPU, use array to use multiple GPUs
     )
