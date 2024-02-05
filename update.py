@@ -14,6 +14,7 @@ def check_for_updates():
         status_result = subprocess.run(
             ["git", "status"], capture_output=True, text=True
         )
+        print(status_result.stdout)
 
         # Check if there are updates available
         if "Your branch is behind" in status_result.stdout:
