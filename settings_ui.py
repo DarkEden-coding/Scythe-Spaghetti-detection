@@ -7,6 +7,7 @@ default_settings = {
     "webcam_name": "Bed",
     "pause_on_spaghetti": True,
     "use_cuda": False,
+    "enable_auto_update": True,
 }
 
 # Prompt the user for each setting
