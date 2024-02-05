@@ -6,13 +6,13 @@ from settings import enable_auto_update
 def check_for_updates():
     try:
         # Use 'sudo' on non-Windows platforms
-        git_command = "git"
+        os = True
         if platform.system() != "Windows":
-            git_command = "sudo git"
+            os = False
 
         # Run 'git status' to check the status of the local repository
         status_result = subprocess.run(
-            [git_command, "status"], capture_output=True, text=True
+            ["git", "status"] if os else ["sudo", "git", "status"], capture_output=True, text=True
         )
         print(status_result.stdout)
 
@@ -21,15 +21,15 @@ def check_for_updates():
             if enable_auto_update:
                 print("\nThere are updates available. Auto Updating per settings...\n")
                 print("Stashing local changes...")
-                subprocess.run([git_command, "stash"])
+                subprocess.run(["git", "stash"] if os else ["sudo", "git", "stash"])
 
                 # Run 'git fetch' to fetch the latest changes from the remote repository
                 print("Fetching latest changes...")
-                subprocess.run([git_command, "fetch"])
+                subprocess.run(["git", "fetch"] if os else ["sudo", "git", "fetch"])
 
                 # Run 'git pull' to pull the latest changes
                 print("Pulling latest changes...")
-                subprocess.run([git_command, "pull"])
+                subprocess.run(["git", "pull"] if os else ["sudo", "git", "pull"])
             else:
                 print("There are updates available. Please pull the latest changes.")
         else:
