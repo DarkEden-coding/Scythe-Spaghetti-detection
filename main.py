@@ -1,7 +1,7 @@
 from time import time
 import update
 
-update.check_for_updates()
+update.check_for_updates()  # Check for updates
 from detect_spaghetti import detect
 from web_interaction.get_image import get_image
 from web_interaction.is_printing import is_printing
