@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 
 
-def _util_export(path):
+def util_export(path):
     # Load a model
     print("Loading model...")
     model = YOLO(path)
@@ -16,6 +16,6 @@ def _util_export(path):
 
 
 if __name__ == "__main__":
-    _util_export(
+    util_export(
         input("Enter the path of the model that you want to export (ending in .pt): ")
     )
