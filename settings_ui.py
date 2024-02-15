@@ -7,7 +7,7 @@ default_settings = {
     "webcam_name": "Bed",
     "pause_on_spaghetti": True,
     "use_cuda": False,
-    "enable_auto_update": True,
+    "enable_auto_update": False,
     "use_onnx": True,
 }
 
