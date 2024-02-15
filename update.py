@@ -27,15 +27,17 @@ def check_for_updates():
             if enable_auto_update:
                 print("\nThere are updates available. Auto Updating per settings...\n")
                 print("Stashing local changes...")
-                subprocess.run(["git", "stash"] if os else ["sudo", "git", "stash"])
+                subprocess.run(
+                    ["sudo", "git", "stash"] if use_sudo else ["git", "stash"]
+                )
 
                 # Run 'git fetch' to fetch the latest changes from the remote repository
                 print("Fetching latest changes...")
-                subprocess.run(["git", "fetch"] if os else ["sudo", "git", "fetch"])
+                subprocess.run(["sudo", "git", "fetch"] if use_sudo else ["git", "fetch"])
 
                 # Run 'git pull' to pull the latest changes
                 print("Pulling latest changes...")
-                subprocess.run(["git", "pull"] if os else ["sudo", "git", "pull"])
+                subprocess.run(["sudo", "git", "pull"] if use_sudo else ["git", "pull"])
             else:
                 print("There are updates available. Please pull the latest changes.")
         else:
