@@ -40,7 +40,7 @@ def check_for_updates():
             print("Your repository is up-to-date.")
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"An error occurred: {e} on line {e.__traceback__.tb_lineno}")
 
 
 if __name__ == "__main__":
