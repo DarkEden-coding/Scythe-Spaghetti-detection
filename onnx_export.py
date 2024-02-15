@@ -10,7 +10,7 @@ def _util_export(path):
     # Export the model
     print("Exporting model...")
     model.export(
-        format="onnx", imgsz=640, simplify=False, device="cpu"
+        format="onnx", imgsz=640, device="cpu"
     )  # settings for exporting to co processer
     print("Model exported.")
 
