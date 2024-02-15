@@ -1,21 +1,23 @@
 import subprocess
-import platform
 from settings import enable_auto_update
 
 
 def check_for_updates():
     try:
-        # Use 'sudo' on non-Windows platforms
-        os = True
-        if platform.system() != "Windows":
-            os = False
-
         # git fetch
-        subprocess.run(["git", "fetch"] if os else ["sudo", "git", "fetch"])
+        use_sudo = False
+        fetch_result = subprocess.run(["git", "fetch"], capture_output=True, text=True)
+        if "detected dubious ownership" in fetch_result.stderr:
+            subprocess.run(
+                ["sudo", "git", "fetch"],
+                capture_output=True,
+                text=True,
+            )
+            use_sudo = True
 
         # Run 'git status' to check the status of the local repository
         status_result = subprocess.run(
-            ["git", "status"] if os else ["sudo", "git", "status"],
+            ["sudo", "git", "status"] if use_sudo else ["git", "status"],
             capture_output=True,
             text=True,
         )
