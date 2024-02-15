@@ -8,3 +8,5 @@ numpy
 keyboard
 roboflow
 webdriver-manager
+onnx
+onnxsim
