@@ -22,22 +22,34 @@ Hello, thanks for checking out my project! This is a **simple and lightweight** 
 
 ## Installation:
 1. Clone the repository <br />
-```> git clone "https://github.com/DarkEden-coding/Scythe-Spaghetti-detection.git"```
+```bash
+git clone "https://github.com/DarkEden-coding/Scythe-Spaghetti-detection.git"
+```
 2. Install the required packages <br />
-```> pip install -r requirements.txt```
+```bash
+pip install -r requirements.txt
+```
 
 ## Configuration:
-1. To configure your settings run settings.py <br />
-```> python3 settings.py``` follow the on screen instructions to configure the settings
+1. To configure your settings run settings_ui.py <br />
+```bash
+python3 settings_ui.py
+``` 
+follow the on screen instructions to configure the settings
 2. to get the bot token, follow this guide: https://discordpy.readthedocs.io/en/stable/discord.html
 3. To get the discord channel id and user id enable developer mode (settings -> advanced -> dev mode) in discord and right click the channel/user and click "copy id"
 
 ## Usage:
 1. Run the `main.py` file <br />
-```> python3 main.py```
+```bash
+python3 main.py
+```
 2. to make the bot automatically start on boot I recommend using a systemctl service, to do this you can use the following guide: https://www.raspberrypi-spy.co.uk/2015/10/how-to-autorun-a-python-script-on-boot-using-systemd/
 <br /><br />
-to check the status of the bot use ```> systemctl status your-service-name```
+to check the status of the bot use 
+```bash
+systemctl status your-service-name
+```
 
 ## Discord Message UI:
 ### status: <br />
@@ -48,6 +60,12 @@ to check the status of the bot use ```> systemctl status your-service-name```
 ## Defenetly 3d printer spaghetti, trust :) <br />
 ![Alt text](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/blob/master/readme_images/Screenshot%202024-02-03%20at%201.58.17%20PM.png?raw=true "The Spaghett")
 
+## Trouble Shooting:
+### User permission issues:
+If you encounter any user related issues try running the relevant file using sudo ie:
+```bash 
+sudo python3 main.py
+```
 
 ## Contributing:
 If you would like to contribute to the project, feel free to make a pull request. I will review it and merge it if it is suitable. If you have any questions, feel free to reach out to me on discord: `scytheeden` or email me at `darkedenc9@gmail.com`. If anyone is willing to "donate" gpu time to train new models that would be greatly appreciated.
