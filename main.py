@@ -1,4 +1,4 @@
-import update
+from model_utils import update
 
 update.check_for_updates()  # Check for updates
 

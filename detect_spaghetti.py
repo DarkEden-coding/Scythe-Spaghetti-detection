@@ -3,7 +3,7 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 from time import time
-from onnx_export import _util_export
+from model_utils.onnx_export import _util_export
 
 if not os.path.exists("settings.py"):
     print("settings.py not found. Please run settings_ui.py first.")
@@ -16,9 +16,9 @@ device = 0 if use_cuda else "cpu"
 
 if use_onnx:
     # if onnx model is there then use it, otherwise run onnx_export.py
-    if not os.path.exists("largeModel.onnx"):
+    if not os.path.exists("model_utils/largeModel.onnx"):
         print("No ONNX model found. Building model...")
-        _util_export("largeModel.pt")
+        _util_export("model_utils/largeModel.pt")
         print("Model built.")
 
 print("Loading YOLO model...")
