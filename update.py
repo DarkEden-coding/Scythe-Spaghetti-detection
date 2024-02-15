@@ -10,11 +10,15 @@ def check_for_updates():
         if platform.system() != "Windows":
             os = False
 
+        # git fetch
+        subprocess.run(["git", "fetch"] if os else ["sudo", "git", "fetch"])
+
         # Run 'git status' to check the status of the local repository
         status_result = subprocess.run(
-            ["git", "status"] if os else ["sudo", "git", "status"], capture_output=True, text=True
+            ["git", "status"] if os else ["sudo", "git", "status"],
+            capture_output=True,
+            text=False,
         )
-        print(status_result.stdout)
 
         # Check if there are updates available
         if "Your branch is behind" in status_result.stdout:

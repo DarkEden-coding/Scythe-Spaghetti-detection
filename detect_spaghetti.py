@@ -3,19 +3,29 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 from time import time
+from onnx_export import _util_export
 
 if not os.path.exists("settings.py"):
     print("settings.py not found. Please run settings_ui.py first.")
     exit()
 
-from settings import use_cuda
+from settings import use_cuda, use_onnx
 
 
 device = 0 if use_cuda else "cpu"
 
+if use_onnx:
+    # if onnx model is there then use it, otherwise run onnx_export.py
+    if not os.path.exists("largeModel.onnx"):
+        print("No ONNX model found. Building model...")
+        _util_export("largeModel.pt")
+        print("Model built.")
+
 print("Loading YOLO model...")
 
-model = YOLO("largeModel.pt")
+model_path = "largeModel.onnx" if use_onnx else "largeModel.pt"
+
+model = YOLO(model_path, task="detect")
 
 print("YOLO model loaded.")
 
@@ -34,8 +44,8 @@ def detect(image, min_conf):
 
     results = model(
         source=image,
-        save=True,
-        save_conf=True,
+        save=False,
+        save_conf=False,
         show=False,
         conf=min_conf,
         device=device,
