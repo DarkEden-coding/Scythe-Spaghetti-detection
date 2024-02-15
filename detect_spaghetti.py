@@ -29,9 +29,6 @@ model = YOLO(model_path, task="detect")
 
 print("YOLO model loaded.")
 
-if not os.path.exists("/fail_images"):
-    os.mkdir("/fail_images")
-
 
 def detect(image, min_conf):
     start_time = time()
@@ -90,14 +87,7 @@ def detect(image, min_conf):
 
     cv2.imwrite("fail_img.jpg", cv2_image)
 
-    filename = "fail_img.jpg"
-    counter = 0
-    while os.path.exists(f"fail_images/{filename}"):
-        counter += 1
-        filename = f"fail_img({counter}).jpg"
-
     if len(box_list) > 0:
-        cv2.imwrite(f"fail_images/{filename}", cv2_image)
         print(f"Detection took {round(time() - start_time, 2)} seconds.")
         return box_list
 
