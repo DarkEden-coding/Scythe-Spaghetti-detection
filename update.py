@@ -17,7 +17,7 @@ def check_for_updates():
         status_result = subprocess.run(
             ["git", "status"] if os else ["sudo", "git", "status"],
             capture_output=True,
-            text=False,
+            text=True,
         )
 
         # Check if there are updates available
