@@ -1,4 +1,4 @@
-import update
+import update  # test
 
 if update.check_for_updates():  # Check for updates
     print("Changes have been made to main.py. Restarting the program...")
