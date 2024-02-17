@@ -1,6 +1,12 @@
 import update
 
-update.check_for_updates()  # Check for updates
+if update.check_for_updates():  # Check for updates
+    print("Changes have been made to main.py. Restarting the program...")
+    import sys
+    import subprocess
+
+    subprocess.run([sys.executable, "main.py"])
+    sys.exit()
 
 from time import time
 from detect_spaghetti import detect
