@@ -1,7 +1,7 @@
 from PIL import Image
 from io import BytesIO
 from settings import printer_url, webcam_name
-from utils import get
+from web_interaction.utils import get
 from requests.exceptions import RequestException
 
 webcam_list = get(printer_url + "server/webcams/list").json()["result"]["webcams"]

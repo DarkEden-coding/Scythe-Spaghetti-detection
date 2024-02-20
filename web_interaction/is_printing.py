@@ -1,5 +1,5 @@
 from settings import printer_url
-from utils import get
+from web_interaction.utils import get
 
 
 def is_printing():
