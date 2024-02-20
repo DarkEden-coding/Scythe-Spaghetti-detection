@@ -6,7 +6,13 @@ from time import sleep
 from scythe_logging import log
 
 
-def get(url):
+def get(url: str):
+    """
+    Get a URL, retrying if a connection error occurs
+    :param url: the URL to get
+    :return:
+    """
+
     while True:
         try:
             return _get(url)
@@ -15,7 +21,13 @@ def get(url):
             sleep(1)
 
 
-def post(url):
+def post(url: str):
+    """
+    Post to a URL, retrying if a connection error occurs
+    :param url: the URL to post to
+    :return:
+    """
+
     while True:
         try:
             return _post(url)

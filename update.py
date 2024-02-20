@@ -3,6 +3,10 @@ from scythe_logging import log
 
 
 def check_for_updates():
+    """
+    Check for updates to the repository and auto updates if settings allow
+    :return: if the main.py file has been updated
+    """
     try:
         # git fetch
         use_sudo = False

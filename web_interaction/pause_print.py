@@ -4,5 +4,10 @@ from web_interaction.utils import post
 
 
 def pause():
+    """
+    Pause the printer
+    :return:
+    """
+
     if is_printing():
         post(printer_url + "printer/print/pause")

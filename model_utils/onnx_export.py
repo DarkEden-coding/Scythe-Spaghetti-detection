@@ -2,6 +2,12 @@ from ultralytics import YOLO
 
 
 def util_export(path):
+    """
+    Export a model to ONNX format
+    :param path: the path to the model to export (ending in .pt)
+    :return:
+    """
+
     # Load a model
     print("Loading model...")
     model = YOLO(path)

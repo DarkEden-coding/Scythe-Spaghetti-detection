@@ -16,7 +16,12 @@ with open(log_file, "a") as file:
     file.write("\n\n")
 
 
-def log(message):
+def log(message: str):
+    """
+    Write message to log file and print to console
+    :param message: the message to write to the log file
+    :return:
+    """
 
     # if file is over one gigabyte remove the first 100 lines
     if os.path.getsize(log_file) > 1000000000:

@@ -5,6 +5,7 @@ import numpy as np
 from time import time
 from model_utils.onnx_export import util_export
 from scythe_logging import log
+from PIL.Image import Image
 
 if not os.path.exists("settings.py"):
     log("settings.py not found. Please run settings_ui.py first.")
@@ -31,7 +32,14 @@ model = YOLO(model_path, task="detect")
 log("YOLO model loaded.")
 
 
-def detect(image, min_conf):
+def detect(image: Image, min_conf: float = 0.5):
+    """
+    Detect spaghetti in an image
+    :param image: the image to detect spaghetti in
+    :param min_conf: the minimum confidence level to consider a detection
+    :return: returns a list of tuples containing the coordinates of the detected spaghetti or False if no spaghetti was detected
+    """
+
     start_time = time()
 
     # convert image to grayscale

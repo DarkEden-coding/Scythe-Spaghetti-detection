@@ -21,6 +21,11 @@ if not snapshot_url:
 
 
 def get_image():
+    """
+    Retrieve an image from the webcam
+    :return: the image as a PIL Image object or False if the request failed
+    """
+
     # Fetch the image from the URL
     try:
         response = get(printer_url + snapshot_url)
