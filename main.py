@@ -145,7 +145,13 @@ async def main():
 
 @client.event
 async def on_ready():
-    await main()
+    while True:
+        try:
+            await main()
+        except Exception as e:
+            print(f"Error: {e}")
+            print("Restarting main loop in 10 seconds...")
+            await asyncio.sleep(10)
 
 
 client.run(discord_bot_token)
