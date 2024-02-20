@@ -1,9 +1,9 @@
-import requests
 from settings import printer_url
+from utils import get
 
 
 def is_printing():
-    response = requests.get(printer_url + "printer/objects/query?print_stats")
+    response = get(printer_url + "printer/objects/query?print_stats")
 
     return (
         "printing"

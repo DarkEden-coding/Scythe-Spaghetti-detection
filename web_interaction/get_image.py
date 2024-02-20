@@ -1,11 +1,10 @@
-import requests
 from PIL import Image
 from io import BytesIO
 from settings import printer_url, webcam_name
+from utils import get
+from requests.exceptions import RequestException
 
-webcam_list = requests.get(printer_url + "server/webcams/list").json()["result"][
-    "webcams"
-]
+webcam_list = get(printer_url + "server/webcams/list").json()["result"]["webcams"]
 
 snapshot_url = None
 
@@ -23,8 +22,8 @@ if not snapshot_url:
 def get_image():
     # Fetch the image from the URL
     try:
-        response = requests.get(printer_url + snapshot_url)
-    except requests.exceptions.RequestException as e:
+        response = get(printer_url + snapshot_url)
+    except RequestException as e:
         print(f"Error fetching image: {e}")
         return False
 
