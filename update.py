@@ -1,4 +1,5 @@
 import subprocess
+from logging import log
 
 
 def check_for_updates():
@@ -26,31 +27,31 @@ def check_for_updates():
 
         # Check if there are updates available
         if "Your branch is behind" in status_result.stdout:
-            print("\nThere are updates available. Auto Updating per settings...\n")
-            print("Stashing local changes...")
+            log("\nThere are updates available. Auto Updating per settings...\n")
+            log("Stashing local changes...")
             subprocess.run(["sudo", "git", "stash"] if use_sudo else ["git", "stash"])
 
             # Run 'git fetch' to fetch the latest changes from the remote repository
-            print("Fetching latest changes...")
+            log("Fetching latest changes...")
             subprocess.run(["sudo", "git", "fetch"] if use_sudo else ["git", "fetch"])
 
             # Run 'git pull' to pull the latest changes
-            print("Pulling latest changes...")
+            log("Pulling latest changes...")
             pull_result = subprocess.run(
                 ["sudo", "git", "pull"] if use_sudo else ["git", "pull"],
                 capture_output=True,
                 text=True,
             )
 
-            print(f"Pull result: {pull_result.stdout}")
+            log(f"Pull result: {pull_result.stdout}")
 
             if "main.py" in pull_result.stdout:
                 return True
         else:
-            print("Your repository is up-to-date.")
+            log("Your repository is up-to-date.")
 
     except Exception as e:
-        print(f"An error occurred: {e} on line {e.__traceback__.tb_lineno}")
+        log(f"An error occurred: {e} on line {e.__traceback__.tb_lineno}")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,8 @@
-import update  # test
+import update
+from logging import log
 
 if update.check_for_updates():  # Check for updates
-    print("Changes have been made to main.py. Restarting the program...")
+    log("Changes have been made to main.py. Restarting the program...")
     import sys
     import subprocess
 
@@ -19,7 +20,7 @@ from io import BytesIO
 import os
 
 if not os.path.exists("settings.py"):
-    print("settings.py not found. Please run settings_ui.py first.")
+    log("settings.py not found. Please run settings_ui.py first.")
     exit()
 
 from settings import (
@@ -30,7 +31,7 @@ from settings import (
     pause_on_spaghetti,
 )
 
-print("Imports complete.")
+log("Imports complete.")
 
 intents = discord.Intents.default()
 intents.typing = False
@@ -40,7 +41,7 @@ client = discord.Client(intents=intents)
 
 
 async def main():
-    print(f"Logged in as {client.user.name}")
+    log(f"Logged in as {client.user.name}")
 
     log_channel = client.get_channel(discord_log_channel_id)
 
@@ -109,7 +110,7 @@ async def main():
 
                 message_id = fail_message.id
 
-                print("Waiting for reaction...")
+                log("Waiting for reaction...")
                 loop = True
                 while loop:
                     reaction_message = await log_channel.fetch_message(message_id)
@@ -117,7 +118,7 @@ async def main():
 
                     for reaction in reactions:
                         if reaction.count > 1:
-                            print("Reaction detected. Resuming detection.")
+                            log("Reaction detected. Resuming detection.")
                             loop = False
                     await asyncio.sleep(1)
             else:
@@ -149,8 +150,8 @@ async def on_ready():
         try:
             await main()
         except Exception as e:
-            print(f"Error: {e}")
-            print("Restarting main loop in 10 seconds...")
+            log(f"Error: {e}")
+            log("Restarting main loop in 10 seconds...")
             await asyncio.sleep(10)
 
 

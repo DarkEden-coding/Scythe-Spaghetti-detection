@@ -4,9 +4,10 @@ import cv2
 import numpy as np
 from time import time
 from model_utils.onnx_export import util_export
+from logging import log
 
 if not os.path.exists("settings.py"):
-    print("settings.py not found. Please run settings_ui.py first.")
+    log("settings.py not found. Please run settings_ui.py first.")
     exit()
 
 from settings import use_cuda, use_onnx
@@ -17,17 +18,17 @@ device = 0 if use_cuda else "cpu"
 if use_onnx:
     # if onnx model is there then use it, otherwise run onnx_export.py
     if not os.path.exists("model_utils/largeModel.onnx"):
-        print("No ONNX model found. Building model...")
+        log("No ONNX model found. Building model...")
         util_export("model_utils/largeModel.pt")
-        print("Model built.")
+        log("Model built.")
 
-print("Loading YOLO model...")
+log("Loading YOLO model...")
 
 model_path = "model_utils/largeModel.onnx" if use_onnx else "model_utils/largeModel.pt"
 
 model = YOLO(model_path, task="detect")
 
-print("YOLO model loaded.")
+log("YOLO model loaded.")
 
 
 def detect(image, min_conf):
@@ -58,7 +59,7 @@ def detect(image, min_conf):
             conf = round(box.conf[0].item(), 2)
             class_num = box.cls[0].item()
 
-            print(f"Confidence: {conf}, Class: {class_num}\n")
+            log(f"Confidence: {conf}, Class: {class_num}\n")
 
             if class_num != 1:
                 continue
@@ -88,8 +89,8 @@ def detect(image, min_conf):
     cv2.imwrite("fail_img.jpg", cv2_image)
 
     if len(box_list) > 0:
-        print(f"Detection took {round(time() - start_time, 2)} seconds.")
+        log(f"Detection took {round(time() - start_time, 2)} seconds.")
         return box_list
 
-    print(f"Detection took {round(time() - start_time, 2)} seconds.")
+    log(f"Detection took {round(time() - start_time, 2)} seconds.")
     return False

@@ -3,6 +3,7 @@ from requests import post as _post
 
 from requests.exceptions import ConnectionError
 from time import sleep
+from logging import log
 
 
 def get(url):
@@ -10,7 +11,7 @@ def get(url):
         try:
             return _get(url)
         except ConnectionError:
-            print("Connection error, retrying...")
+            log("Connection error, retrying...")
             sleep(1)
 
 
@@ -19,5 +20,5 @@ def post(url):
         try:
             return _post(url)
         except ConnectionError:
-            print("Connection error, retrying...")
+            log("Connection error, retrying...")
             sleep(1)

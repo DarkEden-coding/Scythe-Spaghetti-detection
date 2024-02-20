@@ -9,6 +9,8 @@ default_settings = {
     "use_cuda": False,
     "enable_auto_update": False,
     "use_onnx": True,
+    "logging": True,
+    "log_file": "spaghetti.log",
 }
 
 # Prompt the user for each setting
