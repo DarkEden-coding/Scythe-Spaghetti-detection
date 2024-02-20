@@ -1,5 +1,5 @@
 import subprocess
-from logging import log
+from scythe_logging import log
 
 
 def check_for_updates():

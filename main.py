@@ -1,5 +1,5 @@
 import update
-from logging import log
+from scythe_logging import log
 
 if update.check_for_updates():  # Check for updates
     log("Changes have been made to main.py. Restarting the program...")

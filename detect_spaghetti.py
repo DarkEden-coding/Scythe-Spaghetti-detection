@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from time import time
 from model_utils.onnx_export import util_export
-from logging import log
+from scythe_logging import log
 
 if not os.path.exists("settings.py"):
     log("settings.py not found. Please run settings_ui.py first.")

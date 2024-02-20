@@ -3,7 +3,7 @@ from requests import post as _post
 
 from requests.exceptions import ConnectionError
 from time import sleep
-from logging import log
+from scythe_logging import log
 
 
 def get(url):

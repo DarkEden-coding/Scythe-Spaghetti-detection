@@ -3,7 +3,7 @@ from io import BytesIO
 from settings import printer_url, webcam_name
 from web_interaction.utils import get
 from requests.exceptions import RequestException
-from logging import log
+from scythe_logging import log
 
 webcam_list = get(printer_url + "server/webcams/list").json()["result"]["webcams"]
 
