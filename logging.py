@@ -11,7 +11,7 @@ now = datetime.datetime.now()
 with open(log_file, "a") as file:
     file.write("\n")
     file.write("-" * 100)
-    file.write(f"{now.strftime('%Y-%m-%d %H:%M:%S')}\n")
+    file.write(f"\n{now.strftime('%Y-%m-%d %H:%M:%S')}\n")
     file.write("-" * 100)
     file.write("\n")
 
