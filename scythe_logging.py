@@ -31,5 +31,5 @@ def log(message: str):
             file.writelines(lines[100:])
 
     with open(log_file, "a") as file:
-        file.write(f"{message}\n")
+        file.write(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}]:{message}\n")
     print(message)
