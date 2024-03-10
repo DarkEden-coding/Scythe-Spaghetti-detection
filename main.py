@@ -184,7 +184,7 @@ async def pause_command(ctx):
 
 
 @command_tree.command(
-    name="get log file",
+    name="get_log_file",
     description="Get the log file.",
 )
 async def get_log_file(ctx):
