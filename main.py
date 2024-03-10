@@ -75,7 +75,7 @@ async def main():
         if len(previous_message_list) > 0:
             # remove previous messages
             for message in previous_message_list:
-                print(message.content)
+                log(message.content)
                 await message.delete()
                 previous_message_list.remove(message)
 
