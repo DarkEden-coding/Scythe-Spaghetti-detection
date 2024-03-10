@@ -152,6 +152,11 @@ async def main():
         loop_end_time = time()
         loop_time = loop_end_time - loop_start_time
 
+        if loop_time > target_loop_time:
+            log(f"Loop time exceeded target loop time by {loop_time - target_loop_time} seconds.")
+            continue
+
+        log(f"Loop time: {loop_time} seconds.")
         await asyncio.sleep(target_loop_time - loop_time)
 
 
