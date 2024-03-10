@@ -153,7 +153,9 @@ async def main():
         loop_time = loop_end_time - loop_start_time
 
         if loop_time > target_loop_time:
-            log(f"Loop time exceeded target loop time by {loop_time - target_loop_time} seconds.")
+            log(
+                f"Loop time exceeded target loop time by {loop_time - target_loop_time} seconds."
+            )
             continue
 
         log(f"Loop time: {loop_time} seconds.")
@@ -179,6 +181,17 @@ async def on_ready():
 async def pause_command(ctx):
     pause()
     await ctx.response.send_message("Printer paused.")
+
+
+@command_tree.command(
+    name="get log file",
+    description="Get the log file.",
+)
+async def get_log_file(ctx):
+    with open("log.txt", "rb") as file:
+        await ctx.response.send_message(
+            "Log file:", file=discord.File(file, filename="log.txt")
+        )
 
 
 client.run(discord_bot_token)
