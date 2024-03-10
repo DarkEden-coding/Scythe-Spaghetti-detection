@@ -1,10 +1,10 @@
-import update
+from scytheautoupdate import check_for_updates
 from scythe_logging import log
+import subprocess
 
-if update.check_for_updates():  # Check for updates
+if check_for_updates():  # Check for updates
     log("Changes have been made to main.py. Restarting the program...")
     import sys
-    import subprocess
 
     subprocess.run([sys.executable, "main.py"])
     sys.exit()
@@ -20,8 +20,8 @@ from io import BytesIO
 import os
 
 if not os.path.exists("settings.py"):
-    log("settings.py not found. Please run settings_ui.py first.")
-    exit()
+    log("settings.py not found. Running setup.py...\n")
+    subprocess.run(["python", "settings_ui.py"])
 
 from settings import (
     discord_bot_token,
@@ -38,6 +38,8 @@ intents.typing = False
 intents.presences = False
 
 client = discord.Client(intents=intents)
+
+command_tree = discord.app_commands.CommandTree(client)
 
 
 async def main():
@@ -94,7 +96,7 @@ async def main():
                 description = f"Print NOT automatically paused. Please check the printer. <@{discord_ping_userid}>"
                 if pause_on_spaghetti:
                     pause()
-                    description = f"Print automatically paused. Please check the printer. <@{discord_ping_userid}>"
+                    description = f"Print automatically paused. Please check the printer. <@{discord_ping_userid}>\npress the 👍 reaction to resume. Press the 👎 reaction to keep paused."
 
                 with open("fail_img.jpg", "rb") as image_file:
                     fail_message = await log_channel.send(
@@ -107,20 +109,29 @@ async def main():
                     )
 
                 await fail_message.add_reaction("👍")
+                if not pause_on_spaghetti:
+                    await fail_message.add_reaction("👎")
 
                 message_id = fail_message.id
 
                 log("Waiting for reaction...")
-                loop = True
-                while loop:
+
+                while True:
                     reaction_message = await log_channel.fetch_message(message_id)
                     reactions = reaction_message.reactions
 
                     for reaction in reactions:
-                        if reaction.count > 1:
+                        if reaction.emoji == "👍" and reaction.count > 1:
                             log("Reaction detected. Resuming detection.")
-                            loop = False
-                    await asyncio.sleep(1)
+                            break
+
+                        if not pause_on_spaghetti:
+                            if reaction.emoji == "👎" and reaction.count > 1:
+                                log("Reaction detected. Pausing.")
+                                pause()
+                                break
+
+                    await asyncio.sleep(0.1)
             else:
                 await log_channel.send(
                     embed=discord.Embed(
@@ -146,13 +157,23 @@ async def main():
 
 @client.event
 async def on_ready():
+    await tree.sync()
     while True:
         try:
             await main()
         except Exception as e:
-            log(f"Error: {e}")
+            log(f"Error in main loop: {e}")
             log("Restarting main loop in 10 seconds...")
             await asyncio.sleep(10)
+
+
+@tree.command(
+    name="pause",
+    description="Pause the printer.",
+)
+async def pause_command(ctx):
+    pause()
+    await ctx.response.send_message("Printer paused.")
 
 
 client.run(discord_bot_token)
