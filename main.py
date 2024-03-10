@@ -72,10 +72,11 @@ async def main():
         run_time %= 60
         seconds = run_time
 
-        # remove previous messages
-        for message in previous_message_list:
-            await message.delete()
-            previous_message_list.pop(previous_message_list.index(message))
+        if len(previous_message_list) > 0:
+            # remove previous messages
+            for message in previous_message_list:
+                await message.delete()
+                previous_message_list.remove(message)
 
         previous_message_list.append(
             await log_channel.send(
