@@ -49,6 +49,8 @@ async def main():
 
     start_time = time()
 
+    previous_message_list = []
+
     await log_channel.send(
         embed=discord.Embed(
             title=f"Note: Monitoring for spaghetti has been started. Target loop time: {target_loop_time} seconds.",
@@ -69,10 +71,16 @@ async def main():
         run_time %= 60
         seconds = run_time
 
-        await log_channel.send(
-            embed=discord.Embed(
-                title=f"Note: Monitoring for spaghetti. Has been running for {int(days)} days, {int(hours)} hours, {int(minutes)} minutes, and {int(seconds)} seconds.",
-                color=discord.Color.green(),
+        # remove previous messages
+        for message in previous_message_list:
+            await message.delete()
+
+        previous_message_list.append(
+            await log_channel.send(
+                embed=discord.Embed(
+                    title=f"Note: Monitoring for spaghetti. Has been running for {int(days)} days, {int(hours)} hours, {int(minutes)} minutes, and {int(seconds)} seconds.",
+                    color=discord.Color.green(),
+                )
             )
         )
 
@@ -133,12 +141,14 @@ async def main():
 
                     await asyncio.sleep(0.1)
             else:
-                await log_channel.send(
-                    embed=discord.Embed(
-                        title="Note: Status, current camera image attached.",
-                        color=discord.Color.green(),
-                    ),
-                    file=discord.File(image_bytes, filename="current_view.jpg"),
+                previous_message_list.append(
+                    await log_channel.send(
+                        embed=discord.Embed(
+                            title="Note: Status, current camera image attached.",
+                            color=discord.Color.green(),
+                        ),
+                        file=discord.File(image_bytes, filename="current_view.jpg"),
+                    )
                 )
 
         else:
