@@ -24,7 +24,7 @@ def log(message: str):
     """
 
     # if file is over one gigabyte remove the first 100 lines
-    if os.path.getsize(log_file) > 1000000000:
+    if os.path.getsize(log_file) > 25 * 1024 * 1024:
         with open(log_file, "r") as file:
             lines = file.readlines()
         with open(log_file, "w") as file:
