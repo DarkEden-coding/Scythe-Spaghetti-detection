@@ -158,7 +158,8 @@ async def main():
             )
             continue
 
-        log(f"Loop time: {loop_time} seconds.")
+        if is_printing():
+            log(f"Loop time: {loop_time} seconds.")
         await asyncio.sleep(target_loop_time - loop_time)
 
 
