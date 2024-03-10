@@ -181,7 +181,9 @@ async def on_ready():
             await main()
         except Exception as e:
             log(f"Error in main loop: {e}")
-            log(f"Error at line: {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}")
+            log(
+                f"Error at line: {e.__traceback__.tb_lineno} in {e.__traceback__.tb_frame.f_code.co_filename}"
+            )
             log("Restarting main loop in 10 seconds...")
             await asyncio.sleep(10)
 
