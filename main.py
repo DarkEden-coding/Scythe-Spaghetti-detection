@@ -167,7 +167,7 @@ async def on_ready():
             await asyncio.sleep(10)
 
 
-@tree.command(
+@command_tree.command(
     name="pause",
     description="Pause the printer.",
 )
