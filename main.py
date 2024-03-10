@@ -188,9 +188,9 @@ async def pause_command(ctx):
     description="Get the log file.",
 )
 async def get_log_file(ctx):
-    with open("log.txt", "rb") as file:
+    with open("spaghetti.log", "rb") as file:
         await ctx.response.send_message(
-            "Log file:", file=discord.File(file, filename="log.txt")
+            "Log file:", file=discord.File(file, filename="spaghetti.log")
         )
 
 
