@@ -157,7 +157,7 @@ async def main():
 
 @client.event
 async def on_ready():
-    await tree.sync()
+    await command_tree.sync()
     while True:
         try:
             await main()
