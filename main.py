@@ -75,6 +75,7 @@ async def main():
         # remove previous messages
         for message in previous_message_list:
             await message.delete()
+            previous_message_list.remove(message)
 
         previous_message_list.append(
             await log_channel.send(
