@@ -1,6 +1,11 @@
 from scytheautoupdate import check_for_updates
-from scythe_logging import log
+import os
 import subprocess
+
+if not os.path.exists("settings.py"):
+    subprocess.run(["python", "settings_ui.py"])
+
+from scythe_logging import log
 
 if check_for_updates():  # Check for updates
     log("Changes have been made to main.py. Restarting the program...")
@@ -17,12 +22,8 @@ from web_interaction.pause_print import pause
 import discord
 import asyncio
 from io import BytesIO
-import os
 import traceback
 
-if not os.path.exists("settings.py"):
-    log("settings.py not found. Running setup.py...\n")
-    subprocess.run(["python", "settings_ui.py"])
 
 from settings import (
     discord_bot_token,
