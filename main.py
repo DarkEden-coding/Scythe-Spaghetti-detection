@@ -87,6 +87,7 @@ async def main():
                 )
             )
         )
+        print(len(previous_message_list))
 
         image = get_image()
         if image:
