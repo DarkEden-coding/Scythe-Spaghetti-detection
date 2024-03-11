@@ -73,11 +73,15 @@ async def main():
         run_time %= 60
         seconds = run_time
 
+        print(f"\n{previous_message_list}\n")
+
         if len(previous_message_list) > 0:
             for message in previous_message_list:
                 # await message.delete()
                 print(f"Deleted message {message.id}")
                 previous_message_list.remove(message)
+
+        print(f"\n{previous_message_list}\n")
 
         previous_message_list.append(
             await log_channel.send(
@@ -87,7 +91,8 @@ async def main():
                 )
             )
         )
-        print(len(previous_message_list))
+
+        print(f"\n{previous_message_list}\n")
 
         image = get_image()
         if image:
