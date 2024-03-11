@@ -55,13 +55,13 @@ async def main():
 
     await log_channel.send(
         embed=discord.Embed(
-            title=f"Note: Monitoring for spaghetti has been started. Target loop time: {target_loop_time} seconds.",
+            title="-" * 50,
             color=discord.Color.green(),
         )
     )
     await log_channel.send(
         embed=discord.Embed(
-            title="-"*50,
+            title=f"Note: Monitoring for spaghetti has been started. Target loop time: {target_loop_time} seconds.",
             color=discord.Color.green(),
         )
     )
