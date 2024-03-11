@@ -73,26 +73,16 @@ async def main():
         run_time %= 60
         seconds = run_time
 
-        print(f"\n{previous_message_list}\n")
-
         if len(previous_message_list) > 0:
             for message in previous_message_list:
-                # await message.delete()
-                print(f"Deleted message {message.id}")
-        previous_message_list = []
+                await message.delete()
 
-        print(f"\n{previous_message_list}\n")
-
-        previous_message_list.append(
-            await log_channel.send(
-                embed=discord.Embed(
-                    title=f"Note: Monitoring for spaghetti. Has been running for {int(days)} days, {int(hours)} hours, {int(minutes)} minutes, and {int(seconds)} seconds.",
-                    color=discord.Color.green(),
-                )
+        previous_message_list = [await log_channel.send(
+            embed=discord.Embed(
+                title=f"Note: Monitoring for spaghetti. Has been running for {int(days)} days, {int(hours)} hours, {int(minutes)} minutes, and {int(seconds)} seconds.",
+                color=discord.Color.green(),
             )
-        )
-
-        print(f"\n{previous_message_list}\n")
+        )]
 
         image = get_image()
         if image:
@@ -200,6 +190,7 @@ async def on_ready():
     description="Pause the printer.",
 )
 async def pause_command(ctx):
+    log("Pausing printer through ctx command...")
     pause()
     await ctx.response.send_message("Printer paused.")
 
@@ -210,6 +201,7 @@ async def pause_command(ctx):
 )
 async def get_log_file(ctx):
     with open("spaghetti.log", "rb") as file:
+        log("Sending log file to user...")
         await ctx.response.send_message(
             "Log file:", file=discord.File(file, filename="spaghetti.log")
         )
