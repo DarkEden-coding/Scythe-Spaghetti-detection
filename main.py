@@ -73,7 +73,7 @@ async def main():
         run_time %= 60
         seconds = run_time
 
-        print(len(previous_message_list))
+        print(previous_message_list)
         if len(previous_message_list) > 0:
             for message in previous_message_list:
                 await message.delete()
