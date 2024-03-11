@@ -79,7 +79,7 @@ async def main():
             for message in previous_message_list:
                 # await message.delete()
                 print(f"Deleted message {message.id}")
-                previous_message_list.remove(message)
+        previous_message_list = []
 
         print(f"\n{previous_message_list}\n")
 
