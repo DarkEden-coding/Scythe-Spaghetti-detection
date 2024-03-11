@@ -20,6 +20,10 @@ Hello, thanks for checking out my project! This is a **simple and lightweight** 
 - [ ] Web Interface
 - [ ] Email Notifications
 
+## Slash Commands (not in main branch):
+- /get_log_file this command will have the bot respond with your current log file, use this when submitting a bug report or when describing an error.
+- /pause this command will pause the printer, used mainly if the bot does not detect errors but you see them in the status messages.
+
 ## Installation:
 1. Clone the repository <br />
 ```bash
