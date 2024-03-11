@@ -59,6 +59,12 @@ async def main():
             color=discord.Color.green(),
         )
     )
+    await log_channel.send(
+        embed=discord.Embed(
+            title="-"*50,
+            color=discord.Color.green(),
+        )
+    )
 
     while True:
         loop_start_time = time()
@@ -77,12 +83,14 @@ async def main():
             for message in previous_message_list:
                 await message.delete()
 
-        previous_message_list = [await log_channel.send(
-            embed=discord.Embed(
-                title=f"Note: Monitoring for spaghetti. Has been running for {int(days)} days, {int(hours)} hours, {int(minutes)} minutes, and {int(seconds)} seconds.",
-                color=discord.Color.green(),
+        previous_message_list = [
+            await log_channel.send(
+                embed=discord.Embed(
+                    title=f"Note: Monitoring for spaghetti. Has been running for {int(days)} days, {int(hours)} hours, {int(minutes)} minutes, and {int(seconds)} seconds.",
+                    color=discord.Color.green(),
+                )
             )
-        )]
+        ]
 
         image = get_image()
         if image:
