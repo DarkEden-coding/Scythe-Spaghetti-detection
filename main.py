@@ -75,9 +75,9 @@ async def main():
 
         if len(previous_message_list) > 0:
             for message in previous_message_list:
-                await message.delete()
+                # await message.delete()
+                print(f"Deleted message {message.id}")
                 previous_message_list.remove(message)
-                print(len(previous_message_list))
 
         previous_message_list.append(
             await log_channel.send(
