@@ -35,7 +35,7 @@ from settings import (
 log("Imports complete.")
 
 intents = discord.Intents.default()
-intents.message_content = True
+intents.message_content = False
 intents.typing = False
 intents.presences = False
 
