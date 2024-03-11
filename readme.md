@@ -25,11 +25,16 @@ Hello, thanks for checking out my project! This is a **simple and lightweight** 
 - /pause this command will pause the printer, used mainly if the bot does not detect errors but you see them in the status messages.
 
 ## Installation:
+To install this software I reccomend using the terminal on the device that your are installing to, 
 1. Clone the repository <br />
 ```bash
 git clone "https://github.com/DarkEden-coding/Scythe-Spaghetti-detection.git"
 ```
-2. Install the required packages <br />
+2. Move into the installation folder
+```bash
+cd Scythe-Spaghetti-detection
+```
+3. Install the required packages <br />
 ```bash
 pip install -r requirements.txt
 ```
