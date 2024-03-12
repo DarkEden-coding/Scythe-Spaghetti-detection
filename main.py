@@ -133,19 +133,22 @@ async def main():
 
                 log("Waiting for reaction...")
 
-                while True:
+                loop = True
+                while loop:
                     reaction_message = await log_channel.fetch_message(message_id)
                     reactions = reaction_message.reactions
 
                     for reaction in reactions:
                         if reaction.emoji == "👍" and reaction.count > 1:
                             log("Reaction detected. Resuming detection.")
+                            loop = False
                             break
 
                         if not pause_on_spaghetti:
                             if reaction.emoji == "👎" and reaction.count > 1:
                                 log("Reaction detected. Pausing.")
                                 pause()
+                                loop = False
                                 break
 
                     await asyncio.sleep(0.1)
