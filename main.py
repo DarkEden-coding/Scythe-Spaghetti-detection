@@ -31,6 +31,7 @@ from settings import (
     discord_log_channel_id,
     target_loop_time,
     pause_on_spaghetti,
+    detection_threshold,
 )
 
 log("Imports complete.")
@@ -105,7 +106,7 @@ async def main():
             image_bytes.seek(0)
 
             if is_printing():
-                detection = detect(pil_image, 0.6)
+                detection = detect(pil_image, detection_threshold)
             else:
                 detection = False
 

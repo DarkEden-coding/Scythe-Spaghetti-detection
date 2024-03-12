@@ -11,6 +11,7 @@ default_settings = {
     "use_onnx": True,
     "logging": True,
     "log_file": "spaghetti.log",
+    "detection_threshold": 0.75,
 }
 
 # Prompt the user for each setting
