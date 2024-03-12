@@ -2,7 +2,7 @@ default_settings = {
     "discord_bot_token": "YOUR DISCORD BOT TOKEN",
     "discord_ping_userid": 111111111111111111,
     "discord_log_channel_id": 111111111111111111,
-    "target_loop_time": 30,
+    "target_loop_time": 15,
     "printer_url": "http://mainsailos.local/",
     "webcam_name": "Bed",
     "pause_on_spaghetti": True,
