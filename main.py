@@ -19,6 +19,7 @@ from detect_spaghetti import detect
 from web_interaction.get_image import get_image
 from web_interaction.is_printing import is_printing
 from web_interaction.pause_print import pause
+from web_interaction.resume_print import resume
 import discord
 import asyncio
 from io import BytesIO
@@ -86,11 +87,11 @@ async def main():
             await previous_time_message.delete()
 
         previous_time_message = await log_channel.send(
-                embed=discord.Embed(
-                    title=f"Note: Monitoring for spaghetti. Has been running for {int(days)} days, {int(hours)} hours, {int(minutes)} minutes, and {int(seconds)} seconds.",
-                    color=discord.Color.green(),
-                )
+            embed=discord.Embed(
+                title=f"Note: Monitoring for spaghetti. Has been running for {int(days)} days, {int(hours)} hours, {int(minutes)} minutes, and {int(seconds)} seconds.",
+                color=discord.Color.green(),
             )
+        )
 
         image = get_image()
         if image:
@@ -109,10 +110,10 @@ async def main():
                 detection = False
 
             if detection:
-                description = f"Print NOT automatically paused. Please check the printer. <@{discord_ping_userid}>"
+                description = f"Print NOT automatically paused. Please check the printer. <@{discord_ping_userid}>\npress the 👍 reaction to resume. Press the 👎 reaction to keep paused."
                 if pause_on_spaghetti:
                     pause()
-                    description = f"Print automatically paused. Please check the printer. <@{discord_ping_userid}>\npress the 👍 reaction to resume. Press the 👎 reaction to keep paused."
+                    description = f"Print automatically paused. Please check the printer. <@{discord_ping_userid}>\npress the 👍 reaction to resume detection. "
 
                 with open("fail_img.jpg", "rb") as image_file:
                     fail_message = await log_channel.send(
@@ -152,7 +153,6 @@ async def main():
 
                     await asyncio.sleep(0.1)
             else:
-
                 if previous_status_message:
                     await previous_status_message.delete()
 
@@ -206,6 +206,16 @@ async def pause_command(ctx):
     log("Pausing printer through ctx command...")
     pause()
     await ctx.response.send_message("Printer paused.")
+
+
+@command_tree.command(
+    name="resume",
+    description="Resume the printer.",
+)
+async def resume_command(ctx):
+    log("Resuming printer through ctx command...")
+    resume()
+    await ctx.response.send_message("Printer resumed.")
 
 
 @command_tree.command(
