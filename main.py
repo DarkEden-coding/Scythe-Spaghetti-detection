@@ -238,4 +238,5 @@ async def get_printer_status(ctx):
     log("Sending printer status to user...")
     await ctx.response.send_message(f"Printer printing: {is_printing()}")
 
+
 client.run(discord_bot_token)
