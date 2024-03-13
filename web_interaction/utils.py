@@ -20,7 +20,7 @@ def get(url: str):
             return response
         except (ConnectionError, HTTPError):
             log("Connection error, retrying...")
-            sleep(.5)
+            sleep(0.5)
 
 
 def post(url: str):
@@ -37,4 +37,4 @@ def post(url: str):
             return response
         except (ConnectionError, HTTPError):
             log("Connection error, retrying...")
-            sleep(.5)
+            sleep(0.5)
