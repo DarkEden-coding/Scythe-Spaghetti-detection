@@ -47,6 +47,21 @@ client = discord.Client(intents=intents)
 command_tree = discord.app_commands.CommandTree(client)
 
 
+async def delete_message(message):
+    """
+    Delete messages robustly
+    :param message: the message to delete
+    :return:
+    """
+    for _ in range(5):
+        try:
+            await message.delete()
+            break
+        except:
+            log("Error deleting message, retrying...")
+            await asyncio.sleep(0.5)
+
+
 async def main():
     log(f"Logged in as {client.user.name}")
 
@@ -84,7 +99,7 @@ async def main():
         seconds = run_time
 
         if previous_time_message:
-            await previous_time_message.delete()
+            await delete_message(previous_time_message)
 
         previous_time_message = await log_channel.send(
             embed=discord.Embed(
@@ -154,7 +169,7 @@ async def main():
                     await asyncio.sleep(0.1)
             else:
                 if previous_status_message:
-                    await previous_status_message.delete()
+                    await delete_message(previous_status_message)
 
                 previous_status_message = await log_channel.send(
                     embed=discord.Embed(
