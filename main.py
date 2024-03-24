@@ -125,7 +125,7 @@ async def main():
                 detection = False
 
             if detection:
-                description = f"Print NOT automatically paused. Please check the printer. <@{discord_ping_userid}>\npress the 👍 reaction to resume. Press the 👎 reaction to keep paused."
+                description = f"Print NOT automatically paused. Please check the printer. <@{discord_ping_userid}>\npress the 👍 reaction to resume. Press the 👎 reaction to pause the print."
                 if pause_on_spaghetti:
                     pause()
                     description = f"Print automatically paused. Please check the printer. <@{discord_ping_userid}>\npress the 👍 reaction to resume detection. "
