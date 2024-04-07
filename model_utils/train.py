@@ -12,7 +12,7 @@ def main():
 
     # Training.
     model.train(
-        data="3d printing fail detection.v7i.yolov8/data.yaml",  # change dataset path
+        data="../3d printing fail detection.v9i.yolov8/data.yaml",  # change dataset path
         imgsz=640,
         epochs=180,
         batch=-1,
