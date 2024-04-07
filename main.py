@@ -129,15 +129,15 @@ async def main():
                 detection = False
 
             if detection:
-                description = f"Print NOT automatically paused. Please check the printer. <@{discord_ping_userid}>\npress the 👍 reaction to resume. Press the 👎 reaction to pause the print."
+                description = "Print NOT automatically paused. Please check the printer.\npress the 👍 reaction to resume detection. Press the 👎 reaction to pause the print."
                 if pause_on_spaghetti:
                     pause()
-                    description = f"Print automatically paused. Please check the printer. <@{discord_ping_userid}>\npress the 👍 reaction to resume detection. "
+                    description = "Print automatically paused. Please check the printer.\npress the 👍 reaction to resume detection. "
 
                 with open("fail_img.jpg", "rb") as image_file:
                     fail_message = await log_channel.send(
                         embed=discord.Embed(
-                            title="FATAL: Spaghetti detected!",
+                            title=f"FATAL: Spaghetti detected!\n<@{discord_ping_userid}>",
                             description=description,
                             color=discord.Color.red(),
                         ),
