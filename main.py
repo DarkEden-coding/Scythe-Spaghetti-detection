@@ -25,6 +25,7 @@ import asyncio
 from io import BytesIO
 import traceback
 
+
 from settings import (
     discord_bot_token,
     discord_ping_userid,
@@ -259,7 +260,6 @@ async def get_printer_status(ctx):
     log("Sending printer status to user...")
     await ctx.response.send_message(f"Printer printing: {is_printing()}")
 
-
 @command_tree.command(
     name="get_image",
     description="Get the current image.",
@@ -286,7 +286,7 @@ async def get_image_command(ctx):
 async def test_ping(ctx):
     log("Sending test ping...")
     # send ping as regular message
-    await ctx.response.send_message(f"@{discord_ping_userid}")
+    await ctx.response.send_message(f"<@{discord_ping_userid}>")
 
 
 client.run(discord_bot_token)
