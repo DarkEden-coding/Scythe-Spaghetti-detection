@@ -136,8 +136,9 @@ async def main():
 
                 with open("fail_img.jpg", "rb") as image_file:
                     fail_message = await log_channel.send(
+                        content=f"<@{discord_ping_userid}>",
                         embed=discord.Embed(
-                            title=f"FATAL: Spaghetti detected!\n<@{discord_ping_userid}>",
+                            title=f"FATAL: Spaghetti detected!",
                             description=description,
                             color=discord.Color.red(),
                         ),
