@@ -25,7 +25,6 @@ import asyncio
 from io import BytesIO
 import traceback
 
-
 from settings import (
     discord_bot_token,
     discord_ping_userid,
@@ -215,9 +214,9 @@ async def on_ready():
             await main()
         except:
             log(f"Error in main loop: {traceback.format_exc()}")
-            log("Restarting main loop in 10 seconds...")
+            log("Restarting main loop in 30 seconds...")
             running = False
-            await asyncio.sleep(10)
+            await asyncio.sleep(30)
             running = True
 
 
@@ -260,6 +259,7 @@ async def get_log_file(ctx):
 async def get_printer_status(ctx):
     log("Sending printer status to user...")
     await ctx.response.send_message(f"Printer printing: {is_printing()}")
+
 
 @command_tree.command(
     name="get_image",
