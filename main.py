@@ -295,9 +295,9 @@ async def test_ping(ctx):
     description="Upload a new detection model from a URL."
 )
 async def upload_detection_model(ctx, url: str):
+    await ctx.send("Downloading the file from the provided URL...")
     log("User attempting to upload a new detection model...")
     log(f"URL: {url}")
-    await ctx.send("Downloading the file from the provided URL...")
     try:
         log("Downloading the file from the provided URL...")
         response = requests.get(url)
