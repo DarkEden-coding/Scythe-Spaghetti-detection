@@ -308,6 +308,7 @@ async def upload_detection_model(ctx, url: str):
             log("User attempted to upload a detection model, but the download failed.")
     except Exception as e:
         await ctx.send(f"An error occurred: {e}")
+        log(f"An error occurred while downloading the detection model: {e}")
 
 
 client.run(discord_bot_token)
