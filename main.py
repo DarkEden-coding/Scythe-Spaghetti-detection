@@ -295,6 +295,8 @@ async def test_ping(ctx):
     description="Upload a new detection model from a URL."
 )
 async def upload_detection_model(ctx, url: str):
+    log("User attempting to upload a new detection model...")
+    log(f"URL: {url}")
     try:
         response = requests.get(url)
         if response.status_code == 200:
