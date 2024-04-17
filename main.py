@@ -295,7 +295,7 @@ async def test_ping(ctx):
     description="Upload a new detection model from a URL."
 )
 async def upload_detection_model(ctx, url: str):
-    await ctx.send("Downloading the file from the provided URL...")
+    await ctx.response.send_message("Downloading the file from the provided URL...")
     log("User attempting to upload a new detection model...")
     log(f"URL: {url}")
     try:
@@ -305,13 +305,13 @@ async def upload_detection_model(ctx, url: str):
         if response.status_code == 200:
             with open("model_utils/largeModel.onnx", "wb") as f:
                 f.write(response.content)
-            await ctx.send(f"Model file '{filename}' downloaded successfully.")
+            await ctx.response.send_message(f"Model file '{filename}' downloaded successfully.")
             log("New detection model successfully downloaded.")
         else:
-            await ctx.send("Failed to download the file from the provided URL.")
+            await ctx.response.send_message("Failed to download the file from the provided URL.")
             log("User attempted to upload a detection model, but the download failed.")
     except Exception as e:
-        await ctx.send(f"An error occurred: {e}")
+        await ctx.response.send_message(f"An error occurred: {e}")
         log(f"An error occurred while downloading the detection model: {e}")
 
 
