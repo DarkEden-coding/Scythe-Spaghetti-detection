@@ -290,7 +290,7 @@ async def test_ping(ctx):
     await ctx.response.send_message(f"<@{discord_ping_userid}>")
 
 
-@bot.command(
+@command_tree.command(
     name="upload_detection_model",
     description="Upload a new detection model from a URL."
 )
