@@ -25,6 +25,7 @@ import asyncio
 from io import BytesIO
 import traceback
 import requests
+from threading import Thread
 
 from settings import (
     discord_bot_token,
@@ -291,16 +292,9 @@ async def test_ping(ctx):
     await ctx.response.send_message(f"<@{discord_ping_userid}>")
 
 
-@command_tree.command(
-    name="upload_detection_model",
-    description="Upload a new detection model from a URL."
-)
-async def upload_detection_model(ctx, url: str):
-    await ctx.response.send_message("Downloading the file from the provided URL...")
-    log("User attempting to upload a new detection model...")
-    log(f"URL: {url}")
+def model_download_thread(url):
+    log("Downloading the file from the provided URL...")
     try:
-        log("Downloading the file from the provided URL...")
         response = requests.get(url)
         log("File downloaded.")
         if response.status_code == 200:
@@ -312,5 +306,13 @@ async def upload_detection_model(ctx, url: str):
     except Exception as e:
         log(f"An error occurred while downloading the detection model: {e}")
 
+
+@command_tree.command(
+    name="upload_detection_model",
+    description="Upload a new detection model from a URL."
+)
+async def upload_detection_model(ctx, url: str):
+    await ctx.response.send_message("Downloading the file from the provided URL...")
+    Thread(target=model_download_thread, args=(url,)).start()
 
 client.run(discord_bot_token)
