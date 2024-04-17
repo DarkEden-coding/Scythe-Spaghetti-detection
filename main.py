@@ -297,10 +297,12 @@ async def test_ping(ctx):
 async def upload_detection_model(ctx, url: str):
     log("User attempting to upload a new detection model...")
     log(f"URL: {url}")
+    await ctx.send("Downloading the file from the provided URL...")
     try:
+        log("Downloading the file from the provided URL...")
         response = requests.get(url)
+        log("File downloaded.")
         if response.status_code == 200:
-            filename = url.split('/')[-1]  # Extract filename from URL
             with open("model_utils/largeModel.onnx", "wb") as f:
                 f.write(response.content)
             await ctx.send(f"Model file '{filename}' downloaded successfully.")
