@@ -12,6 +12,7 @@ default_settings = {
     "logging": True,
     "log_file": "spaghetti.log",
     "detection_threshold": 0.75,
+    "bed_size": (235, 235),
 }
 
 # Prompt the user for each setting

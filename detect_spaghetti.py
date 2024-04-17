@@ -6,6 +6,7 @@ from time import time
 from model_utils.onnx_export import util_export
 from scythe_logging import log
 from PIL.Image import Image
+import hashlib
 
 if not os.path.exists("settings.py"):
     log("settings.py not found. Please run settings_ui.py first.")
@@ -31,6 +32,8 @@ model = YOLO(model_path, task="detect")
 
 log("YOLO model loaded.")
 
+model_hash = hashlib.md5(open(model_path, "rb").read()).hexdigest()
+
 
 def detect(image: Image, min_conf: float = 0.5):
     """
@@ -39,6 +42,14 @@ def detect(image: Image, min_conf: float = 0.5):
     :param min_conf: the minimum confidence level to consider a detection
     :return: returns a list of tuples containing the coordinates of the detected spaghetti or False if no spaghetti was detected
     """
+    global model, model_hash
+
+    # check if the model has been updated
+    if model_hash != hashlib.md5(open(model_path, "rb").read()).hexdigest():
+        log("Model has been updated. Reloading model...")
+        model = YOLO(model_path, task="detect")
+        log("Model reloaded.")
+        model_hash = hashlib.md5(open(model_path, "rb").read()).hexdigest()
 
     start_time = time()
 

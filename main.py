@@ -290,4 +290,19 @@ async def test_ping(ctx):
     await ctx.response.send_message(f"<@{discord_ping_userid}>")
 
 
+@command_tree.command(
+    name="upload_detection_model",
+    description="Upload a new detection model. (used for local calibration)",
+)
+async def upload_detection_model(ctx):
+    if ctx.message.attachments:
+        attachment = ctx.message.attachments[0]  # Assuming only one file is uploaded
+        await attachment.save("model_utils/largeModel.onnx")  # Save the file
+        log("New detection model uploaded successfully.")
+        await ctx.send(f"New model uploaded successfully.")
+    else:
+        await ctx.send("Please upload a file along with the command.")
+        log("No file uploaded with command.")
+
+
 client.run(discord_bot_token)

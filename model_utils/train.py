@@ -12,11 +12,11 @@ def main():
 
     # Training.
     model.train(
-        data="../3d printing fail detection.v9i.yolov8/data.yaml",  # change dataset path
+        data="O:\Python Files\Projects\print-fail-detection\personal_printer_augmentation.v1i.yolov8\data.yaml",  # change dataset path
         imgsz=640,
-        epochs=180,
+        epochs=50,
         batch=-1,
-        name="spaghetti-detection-L14",  # change to new model name
+        name="modif-spaghetti-detection-L15",  # change to new model name
         cache=True,
         device=0,  # 0 is the first GPU, remove this line to use CPU, use array to use multiple GPUs
     )
