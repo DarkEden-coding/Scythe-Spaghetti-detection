@@ -24,6 +24,7 @@ import discord
 import asyncio
 from io import BytesIO
 import traceback
+import requests
 
 from settings import (
     discord_bot_token,
