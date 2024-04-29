@@ -1,6 +1,9 @@
 # Scythe Spaghetti Detection Introduction
 
-Hello, thanks for checking out my project! This is a **simple and lightweight** *OPEN SOURCE* and *SELF-HOSTED* 3D printer fail detection project. It is entirely based in Python and currently uses the **YOLOv8 object detection framework**. The project currently has a large model trained. If needed, I will try to train models for other sizes suitable for less powerful devices such as the Raspi-Zero. This project is in its early stages and is not yet ready for production use, so keep that in mind. If you find any issues please make an issue or pull request, any showcase of your usage of this project would be greatly appreciated, you can contact me using the info below. If the main branch does not have working code I deeply apologies, I am very new to the open source community and have some bad github habbits, if you see non working code on master please contact me asap!
+Hello, thanks for checking out my project! This is a **simple and lightweight** *OPEN SOURCE* and *SELF-HOSTED* 3D printer fail detection project. It is entirely based in Python and currently uses the **YOLOv8 object detection framework**. The project currently has a large model trained. If needed, I will try to train models for other sizes suitable for less powerful devices such as the Raspi-Zero. This project is in its early stages and is not yet ready for production use, so keep that in mind. If you find any issues please make an issue or pull request, any showcase of your usage of this project would be greatly appreciated, you can contact me using the info below. If the main branch does not have working code I deeply apologies, I am very new to the open source community and have some bad github habbits, if you see non working code on main please contact me asap!
+
+# !!!! MASSIVE UPDATE FOR RELYABILITY INCOMING SOON (may 2024) !!!!
+This update will fix many issues with the web requests and adds a system for tweaking the model for your own use to greatly reduce the rate of false positives!
 
 ## Features:
 - [x] **Supports any moonraker supported 3d printer**
