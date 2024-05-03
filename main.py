@@ -86,7 +86,7 @@ async def main():
         )
     )
 
-    while true:
+    while True:
         loop_start_time = time()
 
         # string of the current run time, days, hours, and minutes
@@ -135,7 +135,7 @@ async def main():
                     fail_message = await log_channel.send(
                         content=f"<@{discord_ping_userid}>",
                         embed=discord.Embed(
-                            title=f"FATAL: Spaghetti detected!",
+                            title="FATAL: Spaghetti detected!",
                             description=description,
                             color=discord.Color.red(),
                         ),
@@ -272,7 +272,8 @@ async def get_image_command(ctx):
         image.save(image_bytes, format="JPEG")
         image_bytes.seek(0)
         await ctx.response.send_message(
-            "Current image:", file=discord.File(image_bytes, filename="current_view.jpg")
+            "Current image:",
+            file=discord.File(image_bytes, filename="current_view.jpg"),
         )
     else:
         log("Failed to get image.")
@@ -306,10 +307,11 @@ def model_download_thread(url):
 
 @command_tree.command(
     name="upload_detection_model",
-    description="Upload a new detection model from a URL."
+    description="Upload a new detection model from a URL.",
 )
 async def upload_detection_model(ctx, url: str):
     await ctx.response.send_message("Downloading the file from the provided URL...")
     Thread(target=model_download_thread, args=(url,)).start()
+
 
 client.run(discord_bot_token)
