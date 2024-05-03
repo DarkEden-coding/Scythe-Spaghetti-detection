@@ -47,8 +47,6 @@ client = discord.Client(intents=intents)
 
 command_tree = discord.app_commands.CommandTree(client)
 
-running = True
-
 
 async def delete_message(message):
     """
@@ -66,8 +64,6 @@ async def delete_message(message):
 
 
 async def main():
-    global running
-
     log(f"Logged in as {client.user.name}")
 
     log_channel = client.get_channel(discord_log_channel_id)
@@ -90,7 +86,7 @@ async def main():
         )
     )
 
-    while running:
+    while true:
         loop_start_time = time()
 
         # string of the current run time, days, hours, and minutes
@@ -209,17 +205,18 @@ async def main():
 
 @client.event
 async def on_ready():
-    global running
     await command_tree.sync()
     while True:
         try:
             await main()
         except:
             log(f"Error in main loop: {traceback.format_exc()}")
-            log("Restarting main loop in 30 seconds...")
-            running = False
-            await asyncio.sleep(30)
-            running = True
+            log("Restarting program...")
+
+            import sys
+
+            subprocess.run([sys.executable, "main.py"])
+            sys.exit()
 
 
 @command_tree.command(
