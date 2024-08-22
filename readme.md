@@ -2,8 +2,10 @@
 
 Hello, thanks for checking out my project! This is a **simple and lightweight** *OPEN SOURCE* and *SELF-HOSTED* 3D printer fail detection project. It is entirely based in Python and currently uses the **YOLOv8 object detection framework**. The project currently has a large model trained. If needed, I will try to train models for other sizes suitable for less powerful devices such as the Raspi-Zero. This project is in its early stages and is not yet ready for production use, so keep that in mind. If you find any issues please make an issue or pull request, any showcase of your usage of this project would be greatly appreciated, you can contact me using the info below. If the main branch does not have working code I deeply apologies, I am very new to the open source community and have some bad github habbits, if you see non working code on main please contact me asap!
 
-# !!!! MASSIVE UPDATE FOR RELYABILITY INCOMING SOON (may 2024) !!!!
-This update will fix many issues with the web requests and adds a system for tweaking the model for your own use to greatly reduce the rate of false positives!
+## This project is in alpha! I apologise for any errors or dificulty you have with this project, but as a student I may not have the time to find all the errors, if you find any please report them in the Issues!
+
+# !!!! LARGE UPDATE FOR RELYABILITY INCOMING SOON *tm!!!!
+This update will fix many issues with the web requests and will hopefully reduce false positives and negitives in the detection system.
 
 ## Features:
 - [x] **Supports any moonraker supported 3d printer**
@@ -23,7 +25,7 @@ This update will fix many issues with the web requests and adds a system for twe
 - [ ] Web Interface
 - [ ] Email Notifications
 
-## Slash Commands (not in main branch):
+## Slash Commands (not in main branch)(coming soon):
 - /get_log_file this command will have the bot respond with your current log file, use this when submitting a bug report or when describing an error.
 - /pause this command will pause the printer, used mainly if the bot does not detect errors but you see them in the status messages.
 
@@ -86,4 +88,5 @@ If you would like to contribute to the project, feel free to make a pull request
 - [YOLOv8](https://docs.ultralytics.com/)
 - [Roboflow Dataset](https://universe.roboflow.com/dark-eden-nuheg/3d-printing-fail-detection)
 # Notes:
-If you are a large company looking into using this software please contact me through email about possable modification to better suit your location and system.
+- If you are a large company looking into using this software please contact me through email about possable modification to better suit your location and system.
+- I am not responsable for any damage to your printer while using this project, use at your own risk, the detection will be as good as I can get it but if you have a spaghetti that is not detected and damages your printer I am not responsable.
