@@ -4,7 +4,7 @@ Hello, thanks for checking out my project! This is a **simple and lightweight** 
 
 ## This project is in alpha! I apologise for any errors or dificulty you have with this project, but as a student I may not have the time to find all the errors, if you find any please report them in the Issues!
 
-# !!!! LARGE UPDATE FOR RELYABILITY INCOMING SOON *tm!!!!
+# !!!! LARGE UPDATE FOR RELIABILITY INCOMING SOON *tm!!!!
 This update will fix many issues with the web requests and will hopefully reduce false positives and negitives in the detection system.
 
 ## Features:
