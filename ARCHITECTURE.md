@@ -25,6 +25,8 @@ src/
   notify/
     base.py                 Notifier / Acknowledgement protocols, Null + Composite.
     discord_notifier.py     Discord implementation.
+    web_notifier.py         Local aiohttp dashboard, state API, controls, web ack.
+  web/static/               Build-free dashboard HTML, CSS, and JavaScript.
   utils/                    Formatting and image helpers.
 tools/                      Dev-only: train, export, dataset collection.
 models/                     Weights.
@@ -48,11 +50,12 @@ Discord are the implementations in use. That is what makes the roadmap additive.
 
 ## Adding things
 
-**A notification channel (email, ntfy, a web UI).** Implement `Notifier` in
+**A notification channel (email, ntfy).** Implement `Notifier` in
 `src/notify/`. Return an `Acknowledgement` from `notify()` if your channel can
-carry a "I've seen it" signal; return `None` if it can't. Then add it to the list in
+carry an "I've seen it" signal; return `None` if it can't. Then add it to the list in
 `app.build_notifier` — `CompositeNotifier` fans out to all of them and survives one
-being down.
+being down. The web dashboard follows this path, so its frame always comes from the
+same event and interval as Discord rather than a second camera loop.
 
 **A printer backend (OctoPrint, Duet).** Implement `PrinterClient` in
 `src/printer/`, mapping the firmware's state vocabulary onto `PrintState`.

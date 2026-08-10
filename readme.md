@@ -19,7 +19,7 @@ Hello, thanks for checking out my project! This is a **simple and lightweight** 
 - [ ] Medium Model Trained
 - [ ] Small Model Trained
 - [ ] Nano Model Trained
-- [ ] Web Interface
+- [x] **Local Web Interface**
 - [ ] Email Notifications
 
 ## Slash Commands
@@ -79,6 +79,9 @@ This validates the config, reads the print state, resolves the webcam, and pulls
 | `discord.ping_user_id` | — | Who gets pinged on a failure. |
 | `discord.status_update_mode` | `edit` | `edit` keeps one status message current, `message` posts a new one each loop, `silent` posts none. |
 | `discord.acknowledge_timeout` | `0` | Seconds to wait for a 👍 after a failure before resuming. `0` waits forever. |
+| `web.enabled` | `true` | Serve the local operator dashboard with monitoring. |
+| `web.host` | `0.0.0.0` | Listen on every interface so other devices on the LAN can connect. |
+| `web.port` | `8080` | Dashboard HTTP port. |
 | `printer.url` | `http://mainsailos.local/` | Moonraker address. |
 | `printer.webcam_name` | `Bed` | Exactly as it appears in Mainsail/Fluidd. Case sensitive. |
 | `printer.request_timeout` | `10` | Seconds before a request to the printer gives up. |
@@ -106,6 +109,19 @@ If you already have a `settings.py`, your values are imported automatically the 
 ```bash
 python3 -m src run     # or: scythe run, or: python3 main.py
 ```
+
+### Web dashboard
+
+The dashboard starts with the monitor at `http://<scythe-host>:8080`. It shows
+the latest camera frame at the configured detection cadence, draws current
+detection boxes, reports the latest alert, and provides state-aware pause,
+resume, and acknowledgment controls.
+
+The dashboard intentionally has no login and binds to the local network by
+default. Do not port-forward it or expose it to the public internet. Set
+`web.host` to `127.0.0.1` if it will only be used through a local reverse proxy.
+
+The monitor command starts both Discord and the dashboard.
 
 To start on boot, use a systemd service. A ready-made unit is in [`deploy/scythe.service`](deploy/scythe.service):
 ```bash

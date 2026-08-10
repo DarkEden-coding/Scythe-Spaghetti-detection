@@ -1,0 +1,1 @@
+"""Bundled web dashboard assets."""

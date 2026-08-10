@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-10T16:30:00Z",
+  "title": "Design System: Scythe Machine Console",
+  "extensions": {
+    "colorMeta": {
+      "inspection-black": {"role": "neutral", "displayName": "Inspection Black", "canonical": "#090b0d"},
+      "machine-plane": {"role": "neutral", "displayName": "Machine Plane", "canonical": "#101316"},
+      "signal-amber": {"role": "primary", "displayName": "Signal Amber", "canonical": "#ffbd22"},
+      "healthy-green": {"role": "secondary", "displayName": "Healthy Green", "canonical": "#55d879"},
+      "failure-red": {"role": "tertiary", "displayName": "Failure Red", "canonical": "#ff6464"}
+    },
+    "typographyMeta": {
+      "title": {"displayName": "Panel Title", "purpose": "Camera and surface headings."},
+      "body": {"displayName": "Operator Copy", "purpose": "Status details and recovery text."},
+      "label": {"displayName": "Instrument Label", "purpose": "Compact uppercase telemetry labels."}
+    },
+    "shadows": [
+      {"name": "operational-surface", "value": "0 18px 45px rgba(0, 0, 0, 0.32)", "purpose": "Soft depth beneath primary console surfaces."}
+    ],
+    "motion": [
+      {"name": "state-change", "value": "160ms ease-out", "purpose": "Control and state transitions."}
+    ],
+    "breakpoints": [
+      {"name": "compact-console", "value": "900px"},
+      {"name": "handset", "value": "600px"}
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Control",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The currently available safe machine action.",
+      "html": "<button class=\"ds-primary-control\">RESUME</button>",
+      "css": ".ds-primary-control { min-height: 50px; padding: 11px 14px; border: 1px solid #ffbd22; border-radius: 8px; background: #ffbd22; color: #171204; font: 600 14px system-ui; } .ds-primary-control:hover { background: #ffc83d; } .ds-primary-control:focus-visible { outline: 3px solid #ffbd22; outline-offset: 3px; }"
+    },
+    {
+      "name": "State Chip",
+      "kind": "chip",
+      "description": "Text-plus-dot machine connection status.",
+      "html": "<span class=\"ds-state\"><i></i>MONITOR ONLINE</span>",
+      "css": ".ds-state { display: inline-flex; align-items: center; gap: 9px; color: #a0a6ad; font: 700 12px system-ui; letter-spacing: .08em; } .ds-state i { width: 8px; height: 8px; border-radius: 50%; background: #55d879; }"
+    },
+    {
+      "name": "Machine Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "A responsibility-sized console plane with fine structural seams.",
+      "html": "<section class=\"ds-panel\"><h2>DETECTION VERDICT</h2><p>CLEAR / NO SPAGHETTI</p></section>",
+      "css": ".ds-panel { padding: 16px; border: 1px solid #2b3036; border-radius: 12px; background: #101316; color: #f0f1f2; box-shadow: 0 18px 45px rgba(0,0,0,.32); } .ds-panel h2 { color: #a0a6ad; font: 700 11px system-ui; letter-spacing: .07em; } .ds-panel:focus-within { outline: 3px solid #ffbd22; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Inspection Bay",
+    "overview": "Scythe is a purpose-built inspection station: quiet charcoal machine planes place the camera first, while amber appears only when operator attention or action is required.",
+    "keyCharacteristics": ["Camera-dominant asymmetric layout", "Restrained charcoal and amber material language", "Explicit text-plus-color states", "Low-motion continuous operation"],
+    "rules": [
+      {"name": "The Signal Discipline Rule", "body": "Amber is operational signal, not ambient decoration.", "section": "colors"},
+      {"name": "The Instrument Type Rule", "body": "Monospace belongs only to measurements that benefit from fixed-width comparison.", "section": "typography"}
+    ],
+    "dos": ["Do let the latest camera frame dominate the first viewport.", "Do show the slow update interval through timestamp, countdown, and linear cadence."],
+    "donts": ["Don't imply the camera is live video.", "Don't turn every metric into an equal rounded card."]
+  }
+}

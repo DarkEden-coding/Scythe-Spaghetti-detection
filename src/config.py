@@ -119,6 +119,22 @@ class PrinterSettings:
 
 
 @dataclass
+class WebSettings:
+    """Local operator dashboard bind settings."""
+
+    enabled: bool = True
+    host: str = "0.0.0.0"
+    port: int = 8080
+
+    def validate(self) -> None:
+        """Validate the dashboard listener address."""
+        if not self.host.strip():
+            raise ConfigError("web.host is required.")
+        if not 1 <= self.port <= 65535:
+            raise ConfigError("web.port must be between 1 and 65535.")
+
+
+@dataclass
 class DetectionSettings:
     """Model selection and inference thresholds."""
 
@@ -164,6 +180,7 @@ class Settings:
     discord: DiscordSettings = field(default_factory=DiscordSettings)
     printer: PrinterSettings = field(default_factory=PrinterSettings)
     detection: DetectionSettings = field(default_factory=DetectionSettings)
+    web: WebSettings = field(default_factory=WebSettings)
 
     #: Target seconds between monitor iterations.
     target_loop_time: float = 30.0
@@ -185,6 +202,7 @@ class Settings:
         self.discord.validate()
         self.printer.validate()
         self.detection.validate()
+        self.web.validate()
         return self
 
     def to_dict(self) -> dict[str, Any]:
@@ -459,6 +477,7 @@ __all__ = [
     "DiscordSettings",
     "PrinterSettings",
     "Settings",
+    "WebSettings",
     "env_var_names",
     "load_settings",
     "parse_bool",

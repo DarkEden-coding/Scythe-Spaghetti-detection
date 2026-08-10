@@ -35,11 +35,15 @@ def build_notifier(settings: Settings, printer: PrinterClient) -> Notifier:
     """Assemble the configured notification channels.
 
     Imported lazily so that ``scythe check`` and the test suite do not need the
-    Discord library merely to construct settings.
+    channel libraries merely to construct settings.
     """
     from src.notify.discord_notifier import DiscordNotifier
 
     channels: list[Notifier] = [DiscordNotifier(settings.discord, printer)]
+    if settings.web.enabled:
+        from src.notify.web_notifier import WebNotifier
+
+        channels.append(WebNotifier(settings.web, printer, settings.target_loop_time))
     return channels[0] if len(channels) == 1 else CompositeNotifier(channels)
 
 

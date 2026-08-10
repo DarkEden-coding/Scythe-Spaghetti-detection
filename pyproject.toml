@@ -21,6 +21,7 @@ classifiers = [
 # Runtime only. Training and dataset tooling live in the extras below so a
 # monitoring install does not pull `keyboard` (root on Linux) or `roboflow`.
 dependencies = [
+    "aiohttp>=3.9,<4",
     "discord.py>=2.3,<3",
     "ultralytics>=8.1,<9",
     "requests>=2.31,<3",
@@ -54,6 +55,9 @@ Issues = "https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/issues"
 
 [tool.setuptools.packages.find]
 include = ["src*", "tools*"]
+
+[tool.setuptools.package-data]
+"src.web" = ["static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

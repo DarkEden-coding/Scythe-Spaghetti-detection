@@ -168,6 +168,7 @@ cython_debug/
 settings.json
 settings.py
 settings.local.json
+INSTALLATION.md
 .env
 
 # Runtime artifacts: logs, annotated failure frames, captured datasets.
