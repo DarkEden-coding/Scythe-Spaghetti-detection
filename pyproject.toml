@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scythe-spaghetti-detection"
+version = "0.2.0"
+description = "Self-hosted 3D printer spaghetti detection for Moonraker printers."
+readme = "readme.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "DarkEden-coding", email = "darkedenc9@gmail.com" }]
+keywords = ["3d-printing", "klipper", "moonraker", "yolo", "spaghetti-detection"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Topic :: Printing",
+]
+
+# Runtime only. Training and dataset tooling live in the extras below so a
+# monitoring install does not pull `keyboard` (root on Linux) or `roboflow`.
+dependencies = [
+    "discord.py>=2.3,<3",
+    "ultralytics>=8.1,<9",
+    "requests>=2.31,<3",
+    "urllib3>=1.26,<3",
+    "Pillow>=10.0,<12",
+]
+
+[project.optional-dependencies]
+# ONNX inference and export — the default detection backend.
+onnx = [
+    "onnx>=1.15,<2",
+    "onnxruntime>=1.16,<2",
+    "onnxsim>=0.4,<1",
+]
+# Dataset collection and model training.
+train = [
+    "roboflow>=1.1,<2",
+]
+dev = [
+    "pytest>=7.4,<9",
+    "pytest-asyncio>=0.23,<2",
+    "ruff>=0.4,<1",
+]
+
+[project.scripts]
+scythe = "src.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/DarkEden-coding/Scythe-Spaghetti-detection"
+Issues = "https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/issues"
+
+[tool.setuptools.packages.find]
+include = ["src*", "tools*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+filterwarnings = ["error::DeprecationWarning:src.*"]
+
+[tool.ruff]
+line-length = 90
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM"]
+ignore = [
+    "E501",   # line length is handled by the formatter
+    "B008",   # argparse/dataclass defaults
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+"src/wizard.py" = ["T201"]  # the wizard is a console UI

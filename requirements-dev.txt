@@ -1,0 +1,11 @@
+# Development, testing, and model training.
+# Equivalent to: pip install -e ".[dev,train,onnx]"
+
+-r requirements.txt
+
+pytest>=7.4,<9
+pytest-asyncio>=0.23,<2
+ruff>=0.4,<1
+
+# Dataset collection (tools/collect_dataset.py --upload).
+roboflow>=1.1,<2

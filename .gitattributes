@@ -1,0 +1,17 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.pt binary
+*.onnx binary
+
+# NOTE: model checkpoints are large. The repo history is currently ~550 MB for
+# an 84 MB model because every retrain was committed to the tree. To fix that,
+# enable Git LFS deliberately (it rewrites history and needs a force-push):
+#
+#     git lfs install
+#     git lfs track "*.pt" "*.onnx" "*.engine"
+#     git lfs migrate import --include="*.pt,*.onnx" --everything
+#
+# Left off by default so a `git commit` does not fail on machines without
+# git-lfs installed.

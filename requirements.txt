@@ -1,12 +1,18 @@
-discord
-ultralytics
-selenium
-requests
-Pillow
-opencv-python
-numpy
-keyboard
-roboflow
-webdriver-manager
-onnx
-onnxsim
+# Runtime dependencies for monitoring.
+#
+# Training and dataset collection deps live in requirements-dev.txt, so a
+# printer install no longer pulls roboflow or `keyboard` (which needs root on
+# Linux). selenium and webdriver-manager were listed here but used nowhere.
+#
+# Equivalent to: pip install -e ".[onnx]"
+
+discord.py>=2.3,<3
+ultralytics>=8.1,<9
+requests>=2.31,<3
+urllib3>=1.26,<3
+Pillow>=10.0,<12
+
+# ONNX backend (detection.use_onnx, on by default — much faster on a Pi).
+onnx>=1.15,<2
+onnxruntime>=1.16,<2
+onnxsim>=0.4,<1

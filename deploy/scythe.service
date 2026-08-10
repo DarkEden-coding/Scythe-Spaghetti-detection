@@ -1,0 +1,47 @@
+# Scythe spaghetti detection.
+#
+#   sudo cp deploy/scythe.service /etc/systemd/system/
+#   sudo nano /etc/systemd/system/scythe.service   # set User and WorkingDirectory
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now scythe
+#
+# Do not run this as root. The bot only needs to read its own directory and
+# reach Moonraker over HTTP.
+
+[Unit]
+Description=Scythe 3D printer spaghetti detection
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/Scythe-Spaghetti-detection
+ExecStart=/usr/bin/python3 -m src run
+
+# The token can live here instead of in settings.json if you prefer:
+# Environment=SCYTHE_DISCORD_BOT_TOKEN=...
+# EnvironmentFile=-/etc/scythe.env
+
+Restart=on-failure
+RestartSec=10
+# The updater restarts the process via execv on a successful update; give it
+# room to do so without systemd deciding the unit is flapping.
+StartLimitBurst=5
+StartLimitIntervalSec=300
+
+# Inference is CPU-hungry; stay out of the way of Klipper's timing.
+Nice=10
+
+StandardOutput=journal
+StandardError=journal
+
+# Modest hardening. Remove these if your setup needs wider access.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/pi/Scythe-Spaghetti-detection
+
+[Install]
+WantedBy=multi-user.target

@@ -162,3 +162,22 @@ cython_debug/
 
 !/fail_img.jpg
 !/current_view.jpg
+
+# --- Scythe -------------------------------------------------------------
+# Config holds the Discord bot token. Never commit it.
+settings.json
+settings.py
+settings.local.json
+.env
+
+# Runtime artifacts: logs, annotated failure frames, captured datasets.
+data/
+fail_img.jpg
+
+# Exported/derived model weights (rebuilt from the .pt on first run).
+*.onnx
+models/*.engine
+
+# Training output.
+runs/
+datasets/
