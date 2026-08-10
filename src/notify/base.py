@@ -113,8 +113,20 @@ class CompositeNotifier(BaseNotifier):
         return len(self._notifiers)
 
     async def start(self) -> None:
+        """Start every available channel, isolating startup failures."""
+        active: list[Notifier] = []
         for notifier in self._notifiers:
-            await notifier.start()
+            try:
+                await notifier.start()
+            except Exception:
+                log.exception("Error starting %s", type(notifier).__name__)
+                try:
+                    await notifier.close()
+                except Exception:
+                    log.exception("Error cleaning up %s", type(notifier).__name__)
+            else:
+                active.append(notifier)
+        self._notifiers = active
 
     async def close(self) -> None:
         for notifier in self._notifiers:
