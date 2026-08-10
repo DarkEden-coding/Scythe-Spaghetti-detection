@@ -1,7 +1,0 @@
-{
-  "model": "openai/gpt-image-2",
-  "aspect_ratio": "16:9",
-  "quality": "medium",
-  "approved": true,
-  "prompt": "High-fidelity desktop web application UI comp for Scythe. Structure C: a narrow vertical machine-state spine at left, dominant center 3D-printer camera inspection stage, low horizontal operator console beneath the camera, and a small right column with detection verdict and box list. Deep charcoal planes, graphite seams, restrained amber signal accent, accessible industrial machine-console styling."
-}
