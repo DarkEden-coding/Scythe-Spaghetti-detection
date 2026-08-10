@@ -196,13 +196,23 @@ class MoonrakerClient:
         if not self.is_printing():
             log.info("Pause requested but printer is not printing; skipping.")
             return False
+        return self._post_action("printer/print/pause", "pause")
 
-        url = self._url("printer/print/pause")
+    def resume(self) -> bool:
+        """Resume the print only when Moonraker reports it as paused."""
+        if self.get_state() is not PrintState.PAUSED:
+            log.info("Resume requested but printer is not paused; skipping.")
+            return False
+        return self._post_action("printer/print/resume", "resume")
+
+    def _post_action(self, path: str, action: str) -> bool:
+        """Issue one non-retried printer action."""
+        url = self._url(path)
         try:
             response = self._session.post(url, timeout=self._timeout)
             response.raise_for_status()
         except requests.RequestException as exc:
-            log.error("Failed to pause print: %s", exc)
+            log.error("Failed to %s print: %s", action, exc)
             return False
-        log.warning("Print paused.")
+        log.warning("Print %sd.", action)
         return True

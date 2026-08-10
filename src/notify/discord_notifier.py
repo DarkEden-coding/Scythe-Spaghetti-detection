@@ -11,9 +11,12 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+from pathlib import Path
 
 import discord
+from discord import app_commands
 
+from src import paths
 from src.config import DiscordSettings
 from src.errors import NotifierError
 from src.events import (
@@ -26,6 +29,7 @@ from src.events import (
     StatusUpdate,
 )
 from src.notify.base import BaseNotifier
+from src.printer.base import PrinterClient
 from src.utils.formatting import format_duration
 from src.utils.images import to_jpeg_bytes
 
@@ -39,13 +43,19 @@ FAIL_FILENAME = "spaghetti.jpg"
 class DiscordAcknowledgement:
     """Waits for a human to react to the failure message."""
 
-    def __init__(self, client: discord.Client, message: discord.Message):
+    def __init__(
+        self, client: discord.Client, message: discord.Message, operator_id: int
+    ):
         self._client = client
         self._message = message
+        self._operator_id = operator_id
 
     def _check(self, reaction: discord.Reaction, user: discord.abc.User) -> bool:
-        return reaction.message.id == self._message.id and user.id != getattr(
-            self._client.user, "id", None
+        return (
+            reaction.message.id == self._message.id
+            and str(reaction.emoji) == ACK_EMOJI
+            and user.id == self._operator_id
+            and user.id != getattr(self._client.user, "id", None)
         )
 
     async def wait(self, timeout: float | None = None) -> bool:
@@ -69,9 +79,19 @@ class DiscordAcknowledgement:
 class DiscordNotifier(BaseNotifier):
     """Posts status and failure messages to a Discord channel."""
 
-    def __init__(self, settings: DiscordSettings, client: discord.Client | None = None):
+    def __init__(
+        self,
+        settings: DiscordSettings,
+        printer: PrinterClient,
+        client: discord.Client | None = None,
+        log_file: Path = paths.LOG_FILE,
+    ):
         self._settings = settings
+        self._printer = printer
         self._client = client or self._build_client()
+        self._log_file = log_file
+        self._commands = app_commands.CommandTree(self._client)
+        self._register_commands()
         self._channel: discord.abc.Messageable | None = None
         self._runner: asyncio.Task | None = None
         self._status_message: discord.Message | None = None
@@ -85,6 +105,97 @@ class DiscordNotifier(BaseNotifier):
         # Reaction acknowledgement needs message content off but reactions on;
         # the default intents already include guild reactions.
         return discord.Client(intents=intents)
+
+    def _register_commands(self) -> None:
+        """Register operator commands once for this client."""
+        commands = (
+            ("pause", "Pause the active print.", self._pause_command),
+            ("resume", "Resume a paused print.", self._resume_command),
+            (
+                "get_printer_status",
+                "Show the current printer state.",
+                self._status_command,
+            ),
+            ("get_image", "Show the current camera image.", self._image_command),
+            ("get_log_file", "Download the Scythe log file.", self._log_command),
+        )
+        for name, description, callback in commands:
+            self._commands.command(name=name, description=description)(callback)
+
+    async def _authorize(self, interaction: discord.Interaction) -> bool:
+        """Allow printer controls only for the configured operator."""
+        if interaction.user.id == self._settings.ping_user_id:
+            return True
+        await interaction.response.send_message(
+            "Only the configured Scythe operator can use this command.", ephemeral=True
+        )
+        return False
+
+    async def _pause_command(self, interaction: discord.Interaction) -> None:
+        """Handle ``/pause`` without blocking the Discord heartbeat."""
+        if not await self._authorize(interaction):
+            return
+        await interaction.response.defer(ephemeral=True)
+        paused = await asyncio.to_thread(self._printer.pause)
+        await interaction.followup.send(
+            "Printer paused."
+            if paused
+            else "The printer was not printing or could not be paused.",
+            ephemeral=True,
+        )
+
+    async def _resume_command(self, interaction: discord.Interaction) -> None:
+        """Handle ``/resume``; the printer client rejects unsafe states."""
+        if not await self._authorize(interaction):
+            return
+        await interaction.response.defer(ephemeral=True)
+        resumed = await asyncio.to_thread(self._printer.resume)
+        await interaction.followup.send(
+            "Printer resumed."
+            if resumed
+            else "The printer was not paused or could not be resumed.",
+            ephemeral=True,
+        )
+
+    async def _status_command(self, interaction: discord.Interaction) -> None:
+        """Handle ``/get_printer_status``."""
+        if not await self._authorize(interaction):
+            return
+        await interaction.response.defer(ephemeral=True)
+        state = await asyncio.to_thread(self._printer.get_state)
+        await interaction.followup.send(
+            f"Printer state: **{state.value}**", ephemeral=True
+        )
+
+    async def _image_command(self, interaction: discord.Interaction) -> None:
+        """Handle ``/get_image``."""
+        if not await self._authorize(interaction):
+            return
+        await interaction.response.defer(ephemeral=True)
+        image = await asyncio.to_thread(self._printer.get_snapshot)
+        if image is None:
+            await interaction.followup.send(
+                "The camera image is unavailable.", ephemeral=True
+            )
+            return
+        await interaction.followup.send(
+            file=discord.File(to_jpeg_bytes(image), filename=STATUS_FILENAME),
+            ephemeral=True,
+        )
+
+    async def _log_command(self, interaction: discord.Interaction) -> None:
+        """Handle ``/get_log_file``."""
+        if not await self._authorize(interaction):
+            return
+        if not self._log_file.is_file():
+            await interaction.response.send_message(
+                "No log file has been created yet.", ephemeral=True
+            )
+            return
+        await interaction.response.send_message(
+            file=discord.File(self._log_file, filename=self._log_file.name),
+            ephemeral=True,
+        )
 
     # -- lifecycle --------------------------------------------------------- #
 
@@ -120,6 +231,7 @@ class DiscordNotifier(BaseNotifier):
             )
 
         self._channel = channel
+        await self._commands.sync()
         self._started = True
         log.info("Connected to Discord as %s", self._client.user)
 
@@ -259,7 +371,7 @@ class DiscordNotifier(BaseNotifier):
 
         # A failure supersedes the status message; start a fresh one next loop.
         self._status_message = None
-        return DiscordAcknowledgement(self._client, message)
+        return DiscordAcknowledgement(self._client, message, self._settings.ping_user_id)
 
     async def _on_image_unavailable(self, event: ImageUnavailable) -> None:
         await self.channel.send(

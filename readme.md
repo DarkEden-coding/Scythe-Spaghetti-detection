@@ -22,9 +22,14 @@ Hello, thanks for checking out my project! This is a **simple and lightweight** 
 - [ ] Web Interface
 - [ ] Email Notifications
 
-## Slash Commands (coming soon):
-- /get_log_file this command will have the bot respond with your current log file, use this when submitting a bug report or when describing an error.
-- /pause this command will pause the printer, used mainly if the bot does not detect errors but you see them in the status messages.
+## Slash Commands
+Only the configured `discord.ping_user_id` can use these commands:
+
+- `/pause` pauses an active print.
+- `/resume` resumes a paused print; other printer states are rejected.
+- `/get_printer_status` reports the current Moonraker print state.
+- `/get_image` returns the current camera frame.
+- `/get_log_file` returns the current Scythe log for troubleshooting.
 
 ## Installation:
 Install on the machine that can reach your printer.

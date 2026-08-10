@@ -31,7 +31,7 @@ def build_detector(settings: Settings) -> SpaghettiDetector:
     return SpaghettiDetector(settings.detection)
 
 
-def build_notifier(settings: Settings) -> Notifier:
+def build_notifier(settings: Settings, printer: PrinterClient) -> Notifier:
     """Assemble the configured notification channels.
 
     Imported lazily so that ``scythe check`` and the test suite do not need the
@@ -39,7 +39,7 @@ def build_notifier(settings: Settings) -> Notifier:
     """
     from src.notify.discord_notifier import DiscordNotifier
 
-    channels: list[Notifier] = [DiscordNotifier(settings.discord)]
+    channels: list[Notifier] = [DiscordNotifier(settings.discord, printer)]
     return channels[0] if len(channels) == 1 else CompositeNotifier(channels)
 
 
@@ -56,7 +56,7 @@ class Application:
         self._settings = settings
         self._printer = printer or build_printer(settings)
         self._detector = detector or build_detector(settings)
-        self._notifier = notifier or build_notifier(settings)
+        self._notifier = notifier or build_notifier(settings, self._printer)
         self._loop: MonitorLoop | None = None
 
     async def run_async(self) -> None:

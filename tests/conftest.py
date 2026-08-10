@@ -50,11 +50,19 @@ def settings(tmp_path: Path) -> Settings:
 class FakePrinter:
     """A :class:`~src.printer.base.PrinterClient` with scripted responses."""
 
-    def __init__(self, image=None, state=PrintState.PRINTING, pause_succeeds=True):
+    def __init__(
+        self,
+        image=None,
+        state=PrintState.PRINTING,
+        pause_succeeds=True,
+        resume_succeeds=True,
+    ):
         self.image = image
         self.state = state
         self.pause_succeeds = pause_succeeds
+        self.resume_succeeds = resume_succeeds
         self.pause_calls = 0
+        self.resume_calls = 0
         self.snapshot_calls = 0
         self.closed = False
 
@@ -71,6 +79,10 @@ class FakePrinter:
     def pause(self) -> bool:
         self.pause_calls += 1
         return self.pause_succeeds
+
+    def resume(self) -> bool:
+        self.resume_calls += 1
+        return self.resume_succeeds
 
     def close(self) -> None:
         self.closed = True

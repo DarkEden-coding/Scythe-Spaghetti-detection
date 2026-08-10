@@ -28,7 +28,7 @@ CONFIG_PATH = PROJECT_ROOT / "settings.json"
 #: Pre-0.2 config format, read once for migration then left alone.
 LEGACY_CONFIG_PATH = PROJECT_ROOT / "settings.py"
 
-#: Default log file, served by the planned ``/get_log_file`` command.
+#: Default log file, served by the ``/get_log_file`` command.
 LOG_FILE = DATA_DIR / "src.log"
 
 

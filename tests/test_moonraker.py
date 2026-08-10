@@ -171,7 +171,7 @@ class TestPrintState:
         assert client.get_state() is PrintState.UNKNOWN
 
 
-class TestPause:
+class TestPauseAndResume:
     def test_pauses_when_printing(self, settings):
         session = FakeSession({"print_stats": printing_state("printing")})
         assert MoonrakerClient(settings, session=session).pause() is True
@@ -180,6 +180,16 @@ class TestPause:
     def test_does_not_pause_when_idle(self, settings):
         session = FakeSession({"print_stats": printing_state("standby")})
         assert MoonrakerClient(settings, session=session).pause() is False
+        assert session.posts == []
+
+    def test_resumes_only_when_paused(self, settings):
+        session = FakeSession({"print_stats": printing_state("paused")})
+        assert MoonrakerClient(settings, session=session).resume() is True
+        assert session.posts == ["http://printer.local/printer/print/resume"]
+
+    def test_does_not_resume_unknown_or_idle_state(self, settings):
+        session = FakeSession({"print_stats": printing_state("standby")})
+        assert MoonrakerClient(settings, session=session).resume() is False
         assert session.posts == []
 
     def test_reports_failure_rather_than_raising(self, settings):

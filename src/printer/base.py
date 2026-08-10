@@ -61,6 +61,10 @@ class PrinterClient(Protocol):
         """Pause the running print. Returns True if a pause was issued."""
         ...
 
+    def resume(self) -> bool:
+        """Resume a paused print. Returns True if a resume was issued."""
+        ...
+
     def close(self) -> None:
         """Release any held resources."""
         ...
