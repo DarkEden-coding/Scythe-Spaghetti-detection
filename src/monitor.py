@@ -28,6 +28,7 @@ from src.detection.detector import SpaghettiDetector
 from src.detection.results import DetectionResult
 from src.errors import ScytheError
 from src.events import (
+    DebugDetection,
     ImageUnavailable,
     MonitorError,
     MonitoringStarted,
@@ -45,6 +46,22 @@ log = logging.getLogger(__name__)
 FAILURE_NOTIFY_INTERVAL = 10
 
 
+class DebugDetectionControl:
+    """Runtime-only switch for running detection while the printer is idle."""
+
+    def __init__(self) -> None:
+        self._enabled = False
+
+    @property
+    def enabled(self) -> bool:
+        """Return whether idle debug detection is enabled."""
+        return self._enabled
+
+    def set_enabled(self, enabled: bool) -> None:
+        """Enable or disable idle debug detection until process restart."""
+        self._enabled = enabled
+
+
 class MonitorLoop:
     """Polls the printer, runs detection, and emits events."""
 
@@ -54,11 +71,13 @@ class MonitorLoop:
         detector: SpaghettiDetector,
         notifier: Notifier,
         settings: Settings,
+        debug_detection: DebugDetectionControl | None = None,
     ):
         self._printer = printer
         self._detector = detector
         self._notifier = notifier
         self._settings = settings
+        self._debug_detection = debug_detection or DebugDetectionControl()
 
         self._started_at = monotonic()
         self._stop = asyncio.Event()
@@ -141,7 +160,7 @@ class MonitorLoop:
         self._image_failures = 0
 
         state = await asyncio.to_thread(self._printer.get_state)
-        if not state.is_active:
+        if not state.is_active and not self._debug_detection.enabled:
             await self._notifier.notify(
                 StatusUpdate(
                     uptime_seconds=self.uptime,
@@ -153,6 +172,29 @@ class MonitorLoop:
             return
 
         result = await asyncio.to_thread(self._detector.detect, image)
+        if not state.is_active:
+            if result:
+                await self._notifier.notify(
+                    DebugDetection(
+                        result=result,
+                        state=state,
+                        uptime_seconds=self.uptime,
+                    )
+                )
+            else:
+                await self._notifier.notify(
+                    StatusUpdate(
+                        uptime_seconds=self.uptime,
+                        state=state,
+                        image=image,
+                        detail=(
+                            "Idle debug detection — no spaghetti "
+                            f"({result.duration_seconds:.1f}s inference)."
+                        ),
+                    )
+                )
+            return
+
         if not result:
             await self._notifier.notify(
                 StatusUpdate(
@@ -245,4 +287,4 @@ class MonitorLoop:
             log.exception("Failed to deliver %s", type(event).__name__)
 
 
-__all__ = ["MonitorLoop", "PrintState"]
+__all__ = ["DebugDetectionControl", "MonitorLoop", "PrintState"]

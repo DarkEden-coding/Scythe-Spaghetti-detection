@@ -115,7 +115,10 @@ python3 -m src run     # or: scythe run, or: python3 main.py
 The dashboard starts with the monitor at `http://<scythe-host>:8080`. It shows
 the latest camera frame at the configured detection cadence, draws current
 detection boxes, reports the latest alert, and provides state-aware pause,
-resume, and acknowledgment controls.
+resume, and acknowledgment controls. The **Idle detection** toggle temporarily
+runs inference while the printer is not active for debugging; it resets to off
+on restart and never pauses the printer, notifies Discord, or waits for an
+acknowledgment.
 
 The dashboard intentionally has no login and binds to the local network by
 default. Do not port-forward it or expose it to the public internet. Set

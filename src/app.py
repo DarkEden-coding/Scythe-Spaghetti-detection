@@ -15,7 +15,7 @@ import signal
 
 from src.config import Settings
 from src.detection.detector import SpaghettiDetector
-from src.monitor import MonitorLoop
+from src.monitor import DebugDetectionControl, MonitorLoop
 from src.notify.base import CompositeNotifier, Notifier
 from src.printer.base import PrinterClient
 from src.printer.moonraker import MoonrakerClient
@@ -31,7 +31,11 @@ def build_detector(settings: Settings) -> SpaghettiDetector:
     return SpaghettiDetector(settings.detection)
 
 
-def build_notifier(settings: Settings, printer: PrinterClient) -> Notifier:
+def build_notifier(
+    settings: Settings,
+    printer: PrinterClient,
+    debug_detection: DebugDetectionControl,
+) -> Notifier:
     """Assemble the configured notification channels.
 
     Imported lazily so that ``scythe check`` and the test suite do not need the
@@ -43,7 +47,14 @@ def build_notifier(settings: Settings, printer: PrinterClient) -> Notifier:
     if settings.web.enabled:
         from src.notify.web_notifier import WebNotifier
 
-        channels.append(WebNotifier(settings.web, printer, settings.target_loop_time))
+        channels.append(
+            WebNotifier(
+                settings.web,
+                printer,
+                settings.target_loop_time,
+                debug_detection,
+            )
+        )
     return channels[0] if len(channels) == 1 else CompositeNotifier(channels)
 
 
@@ -60,7 +71,10 @@ class Application:
         self._settings = settings
         self._printer = printer or build_printer(settings)
         self._detector = detector or build_detector(settings)
-        self._notifier = notifier or build_notifier(settings, self._printer)
+        self._debug_detection = DebugDetectionControl()
+        self._notifier = notifier or build_notifier(
+            settings, self._printer, self._debug_detection
+        )
         self._loop: MonitorLoop | None = None
 
     async def run_async(self) -> None:
@@ -75,7 +89,11 @@ class Application:
         try:
             await self._notifier.start()
             self._loop = MonitorLoop(
-                self._printer, self._detector, self._notifier, self._settings
+                self._printer,
+                self._detector,
+                self._notifier,
+                self._settings,
+                self._debug_detection,
             )
             await self._loop.run()
         finally:

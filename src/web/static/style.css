@@ -379,6 +379,8 @@ h2 {
 .control-button:not(:disabled):hover { border-color: #4a5159; background: #20252a; }
 .control-primary:not(:disabled) { border-color: var(--amber); background: var(--amber); color: #171204; }
 .control-primary:not(:disabled):hover { background: var(--amber-strong); }
+.control-toggle { grid-column: 1 / -1; }
+.control-toggle[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); }
 .control-alert { grid-column: 1 / -1; border-color: var(--red); color: #ffb8b8; }
 .control-button:disabled { cursor: not-allowed; color: #686f77; opacity: .62; }
 .control-button.busy { cursor: wait; }

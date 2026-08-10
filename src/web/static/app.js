@@ -8,7 +8,7 @@ const elements = Object.fromEntries(
     "overlay-toggle", "verdict", "verdict-title", "verdict-detail", "box-count",
     "box-list", "last-detection", "detected-at", "latest-count", "latest-confidence",
     "metric-count", "metric-confidence", "metric-inference", "metric-interval",
-    "pause-button", "resume-button", "acknowledge-button", "control-result",
+    "pause-button", "resume-button", "debug-detection-button", "acknowledge-button", "control-result",
   ].map((id) => [id, document.getElementById(id)])
 );
 
@@ -162,10 +162,14 @@ function renderDetection(payload) {
 
   if (current) {
     elements.verdict.classList.add("alert");
-    elements["verdict-title"].textContent = "SPAGHETTI DETECTED";
-    elements["verdict-detail"].textContent = current.paused
-      ? "Print paused automatically"
-      : "Check the printer immediately";
+    elements["verdict-title"].textContent = current.debug
+      ? "DEBUG DETECTION"
+      : "SPAGHETTI DETECTED";
+    elements["verdict-detail"].textContent = current.debug
+      ? "Idle inspection only · no alert sent"
+      : current.paused
+        ? "Print paused automatically"
+        : "Check the printer immediately";
   } else if (payload.frame) {
     elements.verdict.classList.add("clear");
     elements["verdict-title"].textContent = "CLEAR / NO SPAGHETTI";
@@ -199,6 +203,10 @@ function renderControls(payload) {
   const printerState = payload.printer.state;
   elements["pause-button"].disabled = printerState !== "printing";
   elements["resume-button"].disabled = printerState !== "paused";
+  const debugEnabled = Boolean(payload.debug_detection_enabled);
+  elements["debug-detection-button"].setAttribute("aria-pressed", String(debugEnabled));
+  elements["debug-detection-button"].querySelector("span").textContent =
+    `Idle detection: ${debugEnabled ? "On" : "Off"}`;
   elements["acknowledge-button"].hidden = !payload.pending_acknowledgement;
 }
 
@@ -248,6 +256,7 @@ async function fetchState() {
       current_detection: null,
       last_detection: null,
       pending_acknowledgement: false,
+      debug_detection_enabled: false,
     };
     disconnected.connection = "disconnected";
     disconnected.message = `Could not reach Scythe: ${error.message}`;
@@ -261,16 +270,22 @@ function schedulePoll(delay) {
   pollTimer = setTimeout(fetchState, delay);
 }
 
-async function control(path, button, successMessage, failureMessage) {
-  const buttons = [elements["pause-button"], elements["resume-button"], elements["acknowledge-button"]];
+async function control(path, button, successMessage, failureMessage, body = null) {
+  const buttons = [
+    elements["pause-button"], elements["resume-button"],
+    elements["debug-detection-button"], elements["acknowledge-button"],
+  ];
   buttons.forEach((item) => { item.disabled = true; });
   button.classList.add("busy");
   elements["control-result"].className = "control-result";
   elements["control-result"].textContent = "Sending command…";
   try {
+    const headers = { "X-Scythe-Request": "1" };
+    if (body) headers["Content-Type"] = "application/json";
     const response = await fetch(path, {
       method: "POST",
-      headers: { "X-Scythe-Request": "1" },
+      headers,
+      body: body ? JSON.stringify(body) : null,
     });
     const result = response.headers.get("content-type")?.includes("application/json")
       ? await response.json()
@@ -295,6 +310,14 @@ elements["resume-button"].addEventListener("click", () => control(
   "/api/resume", elements["resume-button"], "Printer resumed.",
   "The printer was not paused or could not be resumed."
 ));
+elements["debug-detection-button"].addEventListener("click", () => {
+  const enabled = !Boolean(state?.debug_detection_enabled);
+  control(
+    "/api/debug-detection", elements["debug-detection-button"],
+    `Idle detection ${enabled ? "enabled" : "disabled"}.`,
+    "Could not change idle detection mode.", { enabled }
+  );
+});
 elements["acknowledge-button"].addEventListener("click", () => control(
   "/api/acknowledge", elements["acknowledge-button"], "Detection acknowledged. Monitoring can continue.",
   "No detection is waiting for acknowledgement."

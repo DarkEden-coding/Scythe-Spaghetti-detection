@@ -48,6 +48,19 @@ class StatusUpdate(Event):
 
 
 @dataclass(frozen=True)
+class DebugDetection(Event):
+    """A detection produced while idle debug mode is enabled.
+
+    Debug detections are for the local web UI only: they never pause the
+    printer, notify Discord, or wait for operator acknowledgement.
+    """
+
+    result: DetectionResult
+    state: PrintState
+    uptime_seconds: float
+
+
+@dataclass(frozen=True)
 class SpaghettiDetected(Event):
     """A print failure was detected.
 
@@ -79,6 +92,7 @@ class MonitorError(Event):
 
 
 __all__ = [
+    "DebugDetection",
     "Event",
     "ImageUnavailable",
     "MonitorError",

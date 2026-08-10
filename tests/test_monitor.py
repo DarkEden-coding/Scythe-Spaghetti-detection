@@ -7,6 +7,7 @@ import pytest
 from src.detection.results import DetectionResult
 from src.errors import PrinterUnavailable
 from src.events import (
+    DebugDetection,
     ImageUnavailable,
     MonitorError,
     MonitoringStarted,
@@ -14,7 +15,7 @@ from src.events import (
     SpaghettiDetected,
     StatusUpdate,
 )
-from src.monitor import FAILURE_NOTIFY_INTERVAL, MonitorLoop
+from src.monitor import FAILURE_NOTIFY_INTERVAL, DebugDetectionControl, MonitorLoop
 from src.printer.base import PrintState
 from tests.conftest import (
     FakeDetector,
@@ -57,6 +58,24 @@ class TestHappyPath:
 
         assert detector.calls == 0
         assert "Idle" in notifier.of_type(StatusUpdate)[0].detail
+
+    async def test_debug_mode_detects_while_idle_without_alerting(
+        self, settings, frame, detection_result
+    ):
+        notifier = RecordingNotifier(ack=RecordingAck())
+        detector = FakeDetector(detection_result)
+        printer = FakePrinter(frame, state=PrintState.STANDBY)
+        control = DebugDetectionControl()
+        control.set_enabled(True)
+        loop = MonitorLoop(printer, detector, notifier, settings, control)
+
+        await run_briefly(loop, 0.05)
+
+        assert detector.calls > 0
+        assert notifier.of_type(DebugDetection)
+        assert not notifier.of_type(SpaghettiDetected)
+        assert printer.pause_calls == 0
+        assert notifier.ack.waited is False
 
 
 class TestDetection:

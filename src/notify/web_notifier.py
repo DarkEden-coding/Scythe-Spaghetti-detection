@@ -19,6 +19,7 @@ from PIL import Image
 
 from src.config import WebSettings
 from src.events import (
+    DebugDetection,
     Event,
     ImageUnavailable,
     MonitorError,
@@ -27,6 +28,7 @@ from src.events import (
     SpaghettiDetected,
     StatusUpdate,
 )
+from src.monitor import DebugDetectionControl
 from src.notify.base import BaseNotifier
 from src.printer.base import PrinterClient
 
@@ -61,10 +63,12 @@ class WebNotifier(BaseNotifier):
         settings: WebSettings,
         printer: PrinterClient,
         loop_interval: float,
+        debug_detection: DebugDetectionControl,
     ) -> None:
         self._settings = settings
         self._printer = printer
         self._loop_interval = loop_interval
+        self._debug_detection = debug_detection
         self._runner: web.AppRunner | None = None
         self._revision = 0
         self._frame: bytes | None = None
@@ -90,6 +94,7 @@ class WebNotifier(BaseNotifier):
                 web.post("/api/pause", self._pause),
                 web.post("/api/resume", self._resume),
                 web.post("/api/acknowledge", self._acknowledge),
+                web.post("/api/debug-detection", self._set_debug_detection),
                 web.get("/api/healthz", self._health),
             ]
         )
@@ -180,8 +185,9 @@ class WebNotifier(BaseNotifier):
                 "uptime_seconds": event.uptime_seconds,
             }
             await self._store_frame(event.image)
-        elif isinstance(event, SpaghettiDetected):
-            detected_at = time()
+        elif isinstance(event, (SpaghettiDetected, DebugDetection)):
+            is_debug = isinstance(event, DebugDetection)
+            result = event.result
             boxes = [
                 {
                     "x1": box.x1,
@@ -191,27 +197,36 @@ class WebNotifier(BaseNotifier):
                     "confidence": box.confidence,
                     "class_id": box.class_id,
                 }
-                for box in event.result.boxes
+                for box in result.boxes
             ]
             detection = {
-                "detected_at": detected_at,
-                "count": event.result.count,
-                "max_confidence": event.result.max_confidence,
-                "duration_seconds": event.result.duration_seconds,
-                "paused": event.paused,
-                "pause_requested": event.pause_requested,
+                "detected_at": time(),
+                "count": result.count,
+                "max_confidence": result.max_confidence,
+                "duration_seconds": result.duration_seconds,
+                "debug": is_debug,
+                "paused": False if is_debug else event.paused,
+                "pause_requested": False if is_debug else event.pause_requested,
                 "boxes": boxes,
             }
             self._state.update(
                 connection="online",
-                message="Spaghetti detected.",
+                message=("Idle debug detection." if is_debug else "Spaghetti detected."),
                 current_detection=detection,
                 last_detection=detection,
             )
-            self._state["printer"]["state"] = "paused" if event.paused else "printing"
-            await self._store_frame(event.result.image or event.annotated_image)
-            self._pending_ack = WebAcknowledgement()
-            return self._pending_ack
+            if is_debug:
+                self._state["printer"] = {
+                    "state": event.state.value,
+                    "detail": "Idle debug detection found spaghetti.",
+                    "uptime_seconds": event.uptime_seconds,
+                }
+                await self._store_frame(result.image)
+            else:
+                self._state["printer"]["state"] = "paused" if event.paused else "printing"
+                await self._store_frame(result.image or event.annotated_image)
+                self._pending_ack = WebAcknowledgement()
+                return self._pending_ack
         elif isinstance(event, ImageUnavailable):
             self._state.update(
                 connection="camera_unavailable",
@@ -259,6 +274,7 @@ class WebNotifier(BaseNotifier):
             "current_detection": self._state["current_detection"],
             "last_detection": self._state["last_detection"],
             "pending_acknowledgement": pending,
+            "debug_detection_enabled": self._debug_detection.enabled,
         }
 
     async def _index(self, _request: web.Request) -> web.FileResponse:
@@ -304,6 +320,23 @@ class WebNotifier(BaseNotifier):
         self._pending_ack = None
         self._revision += 1
         return web.json_response({"ok": True})
+
+    async def _set_debug_detection(self, request: web.Request) -> web.Response:
+        """Enable or disable runtime-only detection while the printer is idle."""
+        try:
+            payload = await request.json()
+        except ValueError as exc:
+            raise web.HTTPBadRequest(text="Expected a JSON request body.") from exc
+        enabled = payload.get("enabled") if isinstance(payload, dict) else None
+        if not isinstance(enabled, bool):
+            raise web.HTTPBadRequest(text="enabled must be true or false.")
+
+        self._debug_detection.set_enabled(enabled)
+        current = self._state["current_detection"]
+        if not enabled and current and current.get("debug"):
+            self._state.update(current_detection=None, message="")
+        self._revision += 1
+        return web.json_response({"ok": True, "enabled": enabled})
 
     async def _health(self, _request: web.Request) -> web.Response:
         """Return a cheap process health response."""
