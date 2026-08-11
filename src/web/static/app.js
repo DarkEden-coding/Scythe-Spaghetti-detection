@@ -62,8 +62,23 @@ function renderBanner(payload) {
   elements["camera-image"].classList.toggle("stale", payload.connection === "camera_unavailable");
 }
 
+function syncOverlayBounds(frame) {
+  const stage = elements["camera-stage"].getBoundingClientRect();
+  if (!stage.width || !stage.height) return;
+  const scale = Math.min(stage.width / frame.width, stage.height / frame.height);
+  const width = frame.width * scale;
+  const height = frame.height * scale;
+  Object.assign(elements["detection-overlay"].style, {
+    left: `${(stage.width - width) / 2}px`,
+    top: `${(stage.height - height) / 2}px`,
+    width: `${width}px`,
+    height: `${height}px`,
+  });
+}
+
 function renderFrame(payload) {
   if (!payload.frame) return;
+  syncOverlayBounds(payload.frame);
   elements["camera-empty"].hidden = true;
   elements["camera-image"].hidden = false;
   elements["frame-stamp"].hidden = false;
@@ -204,6 +219,7 @@ function renderControls(payload) {
   elements["pause-button"].disabled = printerState !== "printing";
   elements["resume-button"].disabled = printerState !== "paused";
   const debugEnabled = Boolean(payload.debug_detection_enabled);
+  elements["debug-detection-button"].disabled = false;
   elements["debug-detection-button"].setAttribute("aria-pressed", String(debugEnabled));
   elements["debug-detection-button"].querySelector("span").textContent =
     `Idle detection: ${debugEnabled ? "On" : "Off"}`;
@@ -329,5 +345,8 @@ elements["overlay-toggle"].addEventListener("click", () => {
 });
 
 countdownTimer = setInterval(updateCountdown, 500);
+window.addEventListener("resize", () => {
+  if (state?.frame) syncOverlayBounds(state.frame);
+});
 window.addEventListener("beforeunload", () => clearInterval(countdownTimer));
 fetchState();

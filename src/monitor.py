@@ -51,6 +51,8 @@ class DebugDetectionControl:
 
     def __init__(self) -> None:
         self._enabled = False
+        self._print_active = False
+        self._restore_after_print = False
 
     @property
     def enabled(self) -> bool:
@@ -60,6 +62,19 @@ class DebugDetectionControl:
     def set_enabled(self, enabled: bool) -> None:
         """Enable or disable idle debug detection until process restart."""
         self._enabled = enabled
+        self._restore_after_print = False
+
+    def set_print_active(self, active: bool) -> None:
+        """Suspend idle detection for a print and restore it afterward."""
+        if active == self._print_active:
+            return
+        self._print_active = active
+        if active and self._enabled:
+            self._enabled = False
+            self._restore_after_print = True
+        elif not active and self._restore_after_print:
+            self._enabled = True
+            self._restore_after_print = False
 
 
 class MonitorLoop:
@@ -160,6 +175,7 @@ class MonitorLoop:
         self._image_failures = 0
 
         state = await asyncio.to_thread(self._printer.get_state)
+        self._debug_detection.set_print_active(state.is_active)
         if not state.is_active and not self._debug_detection.enabled:
             await self._notifier.notify(
                 StatusUpdate(

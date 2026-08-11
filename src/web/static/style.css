@@ -259,7 +259,7 @@ h2 {
 .camera-empty span { color: var(--faint); font-size: 12px; }
 
 .detection-overlay {
-  position: relative;
+  position: absolute;
   z-index: 2;
   pointer-events: none;
 }

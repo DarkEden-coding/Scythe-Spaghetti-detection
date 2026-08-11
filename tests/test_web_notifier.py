@@ -96,20 +96,52 @@ async def test_debug_detection_is_display_only() -> None:
 
 
 async def test_debug_detection_api_updates_shared_control() -> None:
-    """The dashboard toggle must change the control read by the monitor."""
+    """The dashboard toggle must work repeatedly without requiring a detection."""
     control = DebugDetectionControl()
     notifier = WebNotifier(WebSettings(), FakePrinter(), 30, control)
 
     async with TestClient(TestServer(notifier._app)) as client:
-        response = await client.post(
-            "/api/debug-detection",
-            json={"enabled": True},
-            headers={"X-Scythe-Request": "1"},
-        )
+        for enabled in (True, False, True):
+            response = await client.post(
+                "/api/debug-detection",
+                json={"enabled": enabled},
+                headers={"X-Scythe-Request": "1"},
+            )
+            assert response.status == 200
+            assert control.enabled is enabled
+            assert notifier.state_payload()["debug_detection_enabled"] is enabled
 
-    assert response.status == 200
+
+def test_debug_detection_is_suspended_for_a_print_and_restored() -> None:
+    control = DebugDetectionControl()
+    control.set_enabled(True)
+
+    control.set_print_active(True)
+    assert control.enabled is False
+
+    control.set_print_active(False)
     assert control.enabled is True
-    assert notifier.state_payload()["debug_detection_enabled"] is True
+
+
+def test_manual_idle_detection_change_overrides_automatic_restore() -> None:
+    control = DebugDetectionControl()
+    control.set_enabled(True)
+    control.set_print_active(True)
+
+    control.set_enabled(False)
+    control.set_print_active(False)
+
+    assert control.enabled is False
+
+
+def test_idle_detection_can_be_manually_enabled_during_a_print() -> None:
+    control = DebugDetectionControl()
+    control.set_print_active(True)
+
+    control.set_enabled(True)
+    control.set_print_active(True)
+
+    assert control.enabled is True
 
 
 def test_web_settings_reject_invalid_port() -> None:
