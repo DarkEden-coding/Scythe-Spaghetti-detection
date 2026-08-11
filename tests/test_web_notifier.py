@@ -36,12 +36,14 @@ async def test_status_event_updates_frame_without_another_camera_read() -> None:
             state=PrintState.PRINTING,
             image=Image.new("RGB", (320, 240), "black"),
             detail="No spaghetti (0.4s inference).",
+            captured_at=123.0,
         )
     )
 
     state = notifier.state_payload()
     assert state["printer"]["state"] == "printing"
     assert state["frame"]["width"] == 320
+    assert state["frame"]["captured_at"] == 123.0
     assert state["current_detection"] is None
     assert printer.snapshot_calls == 0
 

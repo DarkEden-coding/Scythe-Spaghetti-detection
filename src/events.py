@@ -45,6 +45,7 @@ class StatusUpdate(Event):
     state: PrintState
     image: Image.Image | None = None
     detail: str = ""
+    captured_at: float | None = None
 
 
 @dataclass(frozen=True)
@@ -58,6 +59,7 @@ class DebugDetection(Event):
     result: DetectionResult
     state: PrintState
     uptime_seconds: float
+    captured_at: float | None = None
 
 
 @dataclass(frozen=True)
@@ -73,6 +75,7 @@ class SpaghettiDetected(Event):
     paused: bool
     pause_requested: bool
     saved_frame: str = ""
+    captured_at: float | None = None
 
 
 @dataclass(frozen=True)

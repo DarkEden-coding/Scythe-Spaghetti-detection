@@ -184,14 +184,14 @@ class WebNotifier(BaseNotifier):
                 "detail": event.detail,
                 "uptime_seconds": event.uptime_seconds,
             }
-            await self._store_frame(event.image)
+            await self._store_frame(event.image, event.captured_at)
         elif isinstance(event, (SpaghettiDetected, DebugDetection)):
             is_debug = isinstance(event, DebugDetection)
             result = event.result
             frame = result.image
             if frame is None and not is_debug:
                 frame = event.annotated_image
-            await self._store_frame(frame)
+            await self._store_frame(frame, event.captured_at)
             boxes = [
                 {
                     "x1": box.x1,
@@ -245,7 +245,9 @@ class WebNotifier(BaseNotifier):
             )
         return None
 
-    async def _store_frame(self, image: Image.Image | None) -> None:
+    async def _store_frame(
+        self, image: Image.Image | None, captured_at: float | None = None
+    ) -> None:
         """Encode and retain one browser-ready JPEG."""
         if image is None:
             return
@@ -258,7 +260,7 @@ class WebNotifier(BaseNotifier):
         self._frame = await asyncio.to_thread(encode)
         self._frame_meta = {
             "url": f"/api/frame.jpg?v={self._revision}",
-            "captured_at": time(),
+            "captured_at": captured_at if captured_at is not None else time(),
             "width": image.width,
             "height": image.height,
         }
@@ -305,7 +307,7 @@ class WebNotifier(BaseNotifier):
         return web.Response(
             body=self._frame,
             content_type="image/jpeg",
-            headers={"Cache-Control": "no-cache", "ETag": f'"{etag}"'},
+            headers={"Cache-Control": "no-store", "ETag": f'"{etag}"'},
         )
 
     async def _pause(self, _request: web.Request) -> web.Response:

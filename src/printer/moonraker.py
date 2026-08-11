@@ -8,6 +8,7 @@ first frame instead of killing the process at import time.
 from __future__ import annotations
 
 import logging
+import secrets
 import threading
 from io import BytesIO
 from urllib.parse import urljoin
@@ -42,7 +43,6 @@ class MoonrakerClient:
         self._base_url = settings.base_url
         self._timeout = settings.request_timeout
         self._snapshot_url: str | None = None
-        self._snapshot_revision = 0
         self._lock = threading.Lock()
         self._owns_session = session is None
         self._session = session or self._build_session(settings)
@@ -153,11 +153,8 @@ class MoonrakerClient:
             log.warning("Could not resolve webcam URL: %s", exc)
             return None
 
-        with self._lock:
-            self._snapshot_revision += 1
-            revision = self._snapshot_revision
         separator = "&" if "?" in url else "?"
-        fresh_url = f"{url}{separator}_scythe={revision}"
+        fresh_url = f"{url}{separator}_scythe={secrets.token_hex(8)}"
         try:
             response = self._get(fresh_url)
         except PrinterUnavailable as exc:

@@ -17,7 +17,7 @@ import asyncio
 import contextlib
 import logging
 from datetime import datetime, timezone
-from time import monotonic
+from time import monotonic, time
 
 from PIL import Image
 
@@ -172,6 +172,7 @@ class MonitorLoop:
         if image is None:
             await self._report_image_failure("Failed to fetch a camera frame.")
             return
+        captured_at = time()
         self._image_failures = 0
 
         state = await asyncio.to_thread(self._printer.get_state)
@@ -183,6 +184,7 @@ class MonitorLoop:
                     state=state,
                     image=image,
                     detail="Idle — detection skipped.",
+                    captured_at=captured_at,
                 )
             )
             return
@@ -195,6 +197,7 @@ class MonitorLoop:
                         result=result,
                         state=state,
                         uptime_seconds=self.uptime,
+                        captured_at=captured_at,
                     )
                 )
             else:
@@ -207,6 +210,7 @@ class MonitorLoop:
                             "Idle debug detection — no spaghetti "
                             f"({result.duration_seconds:.1f}s inference)."
                         ),
+                        captured_at=captured_at,
                     )
                 )
             return
@@ -218,13 +222,16 @@ class MonitorLoop:
                     state=state,
                     image=image,
                     detail=f"No spaghetti ({result.duration_seconds:.1f}s inference).",
+                    captured_at=captured_at,
                 )
             )
             return
 
-        await self._handle_detection(result)
+        await self._handle_detection(result, captured_at)
 
-    async def _handle_detection(self, result: DetectionResult) -> None:
+    async def _handle_detection(
+        self, result: DetectionResult, captured_at: float
+    ) -> None:
         log.warning("Spaghetti detected: %s", result.summary())
 
         pause_requested = self._settings.pause_on_spaghetti
@@ -247,6 +254,7 @@ class MonitorLoop:
                 paused=paused,
                 pause_requested=pause_requested,
                 saved_frame=saved,
+                captured_at=captured_at,
             )
         )
 
