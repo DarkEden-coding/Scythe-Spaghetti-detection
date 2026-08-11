@@ -62,23 +62,8 @@ function renderBanner(payload) {
   elements["camera-image"].classList.toggle("stale", payload.connection === "camera_unavailable");
 }
 
-function syncOverlayBounds(frame) {
-  const stage = elements["camera-stage"].getBoundingClientRect();
-  if (!stage.width || !stage.height) return;
-  const scale = Math.min(stage.width / frame.width, stage.height / frame.height);
-  const width = frame.width * scale;
-  const height = frame.height * scale;
-  Object.assign(elements["detection-overlay"].style, {
-    left: `${(stage.width - width) / 2}px`,
-    top: `${(stage.height - height) / 2}px`,
-    width: `${width}px`,
-    height: `${height}px`,
-  });
-}
-
 function renderFrame(payload) {
   if (!payload.frame) return;
-  syncOverlayBounds(payload.frame);
   elements["camera-empty"].hidden = true;
   elements["camera-image"].hidden = false;
   elements["frame-stamp"].hidden = false;
@@ -107,7 +92,7 @@ function renderOverlay(payload) {
   if (!payload.frame || !detection || !overlayVisible) return;
 
   overlay.setAttribute("viewBox", `0 0 ${payload.frame.width} ${payload.frame.height}`);
-  overlay.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  overlay.setAttribute("preserveAspectRatio", "none");
 
   detection.boxes.forEach((box, index) => {
     const width = Math.max(1, box.x2 - box.x1);
@@ -345,8 +330,5 @@ elements["overlay-toggle"].addEventListener("click", () => {
 });
 
 countdownTimer = setInterval(updateCountdown, 500);
-window.addEventListener("resize", () => {
-  if (state?.frame) syncOverlayBounds(state.frame);
-});
 window.addEventListener("beforeunload", () => clearInterval(countdownTimer));
 fetchState();
