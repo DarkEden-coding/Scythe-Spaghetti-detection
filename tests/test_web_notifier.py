@@ -9,7 +9,13 @@ from PIL import Image
 
 from src.config import WebSettings
 from src.detection.results import DetectionBox, DetectionResult
-from src.events import DebugDetection, SpaghettiDetected, StatusUpdate
+from src.events import (
+    DebugDetection,
+    ImageUnavailable,
+    MonitorError,
+    SpaghettiDetected,
+    StatusUpdate,
+)
 from src.monitor import DebugDetectionControl
 from src.notify.base import Acknowledgement
 from src.notify.web_notifier import WebNotifier
@@ -70,6 +76,25 @@ async def test_detection_exposes_boxes_and_web_acknowledgement() -> None:
 
     ack.acknowledge()
     assert await asyncio.wait_for(ack.wait(), timeout=0.1) is True
+
+
+async def test_camera_and_monitor_errors_clear_an_obsolete_overlay() -> None:
+    """A failed scan must not leave old detection boxes looking current."""
+    notifier = WebNotifier(WebSettings(), FakePrinter(), 30, DebugDetectionControl())
+    result = DetectionResult(
+        boxes=(DetectionBox(10, 20, 110, 140, 0.91, 1),),
+        image=Image.new("RGB", (320, 240), "black"),
+    )
+    await notifier.notify(DebugDetection(result, PrintState.STANDBY, 5))
+
+    await notifier.notify(ImageUnavailable("Camera unavailable.", 1))
+    assert notifier.state_payload()["current_detection"] is None
+    assert notifier.state_payload()["connection"] == "camera_unavailable"
+
+    await notifier.notify(DebugDetection(result, PrintState.STANDBY, 6))
+    await notifier.notify(MonitorError("Inference failed.", 1))
+    assert notifier.state_payload()["current_detection"] is None
+    assert notifier.state_payload()["connection"] == "error"
 
 
 async def test_debug_detection_is_display_only() -> None:

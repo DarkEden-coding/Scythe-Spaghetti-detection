@@ -42,6 +42,7 @@ class MoonrakerClient:
         self._base_url = settings.base_url
         self._timeout = settings.request_timeout
         self._snapshot_url: str | None = None
+        self._snapshot_revision = 0
         self._lock = threading.Lock()
         self._owns_session = session is None
         self._session = session or self._build_session(settings)
@@ -152,8 +153,13 @@ class MoonrakerClient:
             log.warning("Could not resolve webcam URL: %s", exc)
             return None
 
+        with self._lock:
+            self._snapshot_revision += 1
+            revision = self._snapshot_revision
+        separator = "&" if "?" in url else "?"
+        fresh_url = f"{url}{separator}_scythe={revision}"
         try:
-            response = self._get(url)
+            response = self._get(fresh_url)
         except PrinterUnavailable as exc:
             log.warning("Snapshot request failed: %s", exc)
             # The snapshot URL may have changed (camera re-added); rediscover.

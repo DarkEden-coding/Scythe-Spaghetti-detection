@@ -107,6 +107,9 @@ class TestWebcam:
         assert client.get_snapshot() is not None
         assert client.get_snapshot() is not None
         assert sum("webcams/list" in u for u in session.requests) == 1
+        snapshots = [url for url in session.requests if "action=snapshot" in url]
+        assert snapshots[0] != snapshots[1]
+        assert all("_scythe=" in url for url in snapshots)
 
     def test_unknown_webcam_name_raises(self, settings):
         settings.webcam_name = "Nozzle"

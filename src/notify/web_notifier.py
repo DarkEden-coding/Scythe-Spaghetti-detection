@@ -188,6 +188,10 @@ class WebNotifier(BaseNotifier):
         elif isinstance(event, (SpaghettiDetected, DebugDetection)):
             is_debug = isinstance(event, DebugDetection)
             result = event.result
+            frame = result.image
+            if frame is None and not is_debug:
+                frame = event.annotated_image
+            await self._store_frame(frame)
             boxes = [
                 {
                     "x1": box.x1,
@@ -221,10 +225,8 @@ class WebNotifier(BaseNotifier):
                     "detail": "Idle debug detection found spaghetti.",
                     "uptime_seconds": event.uptime_seconds,
                 }
-                await self._store_frame(result.image)
             else:
                 self._state["printer"]["state"] = "paused" if event.paused else "printing"
-                await self._store_frame(result.image or event.annotated_image)
                 self._pending_ack = WebAcknowledgement()
                 return self._pending_ack
         elif isinstance(event, ImageUnavailable):
@@ -232,12 +234,14 @@ class WebNotifier(BaseNotifier):
                 connection="camera_unavailable",
                 message=event.reason,
                 consecutive_failures=event.consecutive_failures,
+                current_detection=None,
             )
         elif isinstance(event, MonitorError):
             self._state.update(
                 connection="error",
                 message=event.message,
                 consecutive_failures=event.consecutive_failures,
+                current_detection=None,
             )
         return None
 

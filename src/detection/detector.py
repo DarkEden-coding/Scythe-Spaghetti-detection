@@ -10,8 +10,10 @@ from __future__ import annotations
 
 import logging
 import threading
+from collections.abc import Iterator
 from pathlib import Path
 from time import perf_counter
+from typing import Any
 
 from PIL import Image
 
@@ -114,7 +116,11 @@ class SpaghettiDetector:
         except Exception as exc:
             raise DetectorError(f"Inference failed: {exc}") from exc
 
-        considered = tuple(self._iter_boxes(raw_results))
+        x_scale = image.width / frame.width
+        y_scale = image.height / frame.height
+        considered = tuple(
+            self._iter_boxes(raw_results, x_scale, y_scale, image.width, image.height)
+        )
         matches = tuple(
             box
             for box in considered
@@ -124,7 +130,7 @@ class SpaghettiDetector:
 
         result = DetectionResult(
             boxes=matches,
-            image=frame,
+            image=image.copy(),
             duration_seconds=perf_counter() - started,
             considered=considered,
         )
@@ -132,16 +138,22 @@ class SpaghettiDetector:
         return result
 
     @staticmethod
-    def _iter_boxes(raw_results):
-        """Flatten Ultralytics' nested result objects into value objects."""
+    def _iter_boxes(
+        raw_results: Any,
+        x_scale: float,
+        y_scale: float,
+        width: int,
+        height: int,
+    ) -> Iterator[DetectionBox]:
+        """Flatten model boxes and map them back onto the camera frame."""
         for result in raw_results:
             for box in getattr(result, "boxes", []) or []:
                 xyxy = box.xyxy[0]
                 yield DetectionBox(
-                    x1=int(xyxy[0].item()),
-                    y1=int(xyxy[1].item()),
-                    x2=int(xyxy[2].item()),
-                    y2=int(xyxy[3].item()),
+                    x1=max(0, min(width, round(xyxy[0].item() * x_scale))),
+                    y1=max(0, min(height, round(xyxy[1].item() * y_scale))),
+                    x2=max(0, min(width, round(xyxy[2].item() * x_scale))),
+                    y2=max(0, min(height, round(xyxy[3].item() * y_scale))),
                     confidence=round(float(box.conf[0].item()), 4),
                     class_id=int(box.cls[0].item()),
                 )

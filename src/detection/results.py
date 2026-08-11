@@ -42,8 +42,8 @@ class DetectionBox:
 class DetectionResult:
     """Outcome of a single inference pass.
 
-    ``image`` is the preprocessed frame the model actually saw, so annotations
-    line up with the boxes without any rescaling at the call site.
+    ``image`` is the original camera frame and boxes use that frame's pixel
+    coordinates. The detector handles mapping from its square model input.
     """
 
     boxes: tuple[DetectionBox, ...] = ()

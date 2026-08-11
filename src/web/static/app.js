@@ -56,10 +56,16 @@ function setConnection(connection) {
 }
 
 function renderBanner(payload) {
-  const visible = ["error", "camera_unavailable", "stopped", "disconnected"].includes(payload.connection);
-  elements["system-banner"].hidden = !visible;
-  elements["system-message"].textContent = payload.message || "Scythe is unavailable.";
-  elements["camera-image"].classList.toggle("stale", payload.connection === "camera_unavailable");
+  const frameAge = payload.frame && Number.isFinite(payload.server_time)
+    ? payload.server_time - payload.frame.captured_at
+    : 0;
+  const staleFrame = frameAge > Math.max(60, payload.loop_interval * 2);
+  const unavailable = ["error", "camera_unavailable", "stopped", "disconnected"].includes(payload.connection);
+  elements["system-banner"].hidden = !unavailable && !staleFrame;
+  elements["system-message"].textContent = staleFrame && !unavailable
+    ? `Camera frame is stale (${Math.floor(frameAge)} seconds old).`
+    : payload.message || "Scythe is unavailable.";
+  elements["camera-image"].classList.toggle("stale", unavailable || staleFrame);
 }
 
 function renderFrame(payload) {
@@ -92,7 +98,7 @@ function renderOverlay(payload) {
   if (!payload.frame || !detection || !overlayVisible) return;
 
   overlay.setAttribute("viewBox", `0 0 ${payload.frame.width} ${payload.frame.height}`);
-  overlay.setAttribute("preserveAspectRatio", "none");
+  overlay.setAttribute("preserveAspectRatio", "xMidYMid meet");
 
   detection.boxes.forEach((box, index) => {
     const width = Math.max(1, box.x2 - box.x1);
@@ -327,6 +333,12 @@ elements["overlay-toggle"].addEventListener("click", () => {
   overlayVisible = !overlayVisible;
   elements["overlay-toggle"].setAttribute("aria-pressed", String(overlayVisible));
   if (state) renderOverlay(state);
+});
+
+elements["camera-image"].addEventListener("error", () => {
+  elements["system-banner"].hidden = false;
+  elements["system-message"].textContent = "The latest camera frame could not be displayed.";
+  elements["camera-image"].classList.add("stale");
 });
 
 countdownTimer = setInterval(updateCountdown, 500);
