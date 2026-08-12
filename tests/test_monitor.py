@@ -8,6 +8,7 @@ from src.detection.results import DetectionResult
 from src.errors import PrinterUnavailable
 from src.events import (
     DebugDetection,
+    FrameCaptured,
     ImageUnavailable,
     MonitorError,
     MonitoringStarted,
@@ -72,6 +73,7 @@ class TestHappyPath:
         await run_briefly(loop, 0.05)
 
         assert detector.calls > 0
+        assert notifier.of_type(FrameCaptured)
         assert notifier.of_type(DebugDetection)
         assert not notifier.of_type(SpaghettiDetected)
         assert printer.pause_calls == 0

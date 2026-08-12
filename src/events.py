@@ -49,6 +49,16 @@ class StatusUpdate(Event):
 
 
 @dataclass(frozen=True)
+class FrameCaptured(Event):
+    """A fresh camera frame awaiting inference."""
+
+    uptime_seconds: float
+    state: PrintState
+    image: Image.Image
+    captured_at: float
+
+
+@dataclass(frozen=True)
 class DebugDetection(Event):
     """A detection produced while idle debug mode is enabled.
 
@@ -97,6 +107,7 @@ class MonitorError(Event):
 __all__ = [
     "DebugDetection",
     "Event",
+    "FrameCaptured",
     "ImageUnavailable",
     "MonitorError",
     "MonitoringStarted",

@@ -29,6 +29,7 @@ from src.detection.results import DetectionResult
 from src.errors import ScytheError
 from src.events import (
     DebugDetection,
+    FrameCaptured,
     ImageUnavailable,
     MonitorError,
     MonitoringStarted,
@@ -189,6 +190,14 @@ class MonitorLoop:
             )
             return
 
+        await self._notifier.notify(
+            FrameCaptured(
+                uptime_seconds=self.uptime,
+                state=state,
+                image=image,
+                captured_at=captured_at,
+            )
+        )
         result = await asyncio.to_thread(self._detector.detect, image)
         if not state.is_active:
             if result:

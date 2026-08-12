@@ -11,6 +11,7 @@ from src.config import WebSettings
 from src.detection.results import DetectionBox, DetectionResult
 from src.events import (
     DebugDetection,
+    FrameCaptured,
     ImageUnavailable,
     MonitorError,
     SpaghettiDetected,
@@ -46,6 +47,23 @@ async def test_status_event_updates_frame_without_another_camera_read() -> None:
     assert state["frame"]["captured_at"] == 123.0
     assert state["current_detection"] is None
     assert printer.snapshot_calls == 0
+
+
+async def test_captured_frame_is_published_before_inference_finishes() -> None:
+    notifier = WebNotifier(WebSettings(), FakePrinter(), 30, DebugDetectionControl())
+
+    await notifier.notify(
+        FrameCaptured(
+            uptime_seconds=5,
+            state=PrintState.STANDBY,
+            image=Image.new("RGB", (1920, 1080), "black"),
+            captured_at=123.0,
+        )
+    )
+
+    state = notifier.state_payload()
+    assert state["frame"]["captured_at"] == 123.0
+    assert state["printer"]["detail"] == "Inspecting fresh camera frame…"
 
 
 async def test_detection_exposes_boxes_and_web_acknowledgement() -> None:

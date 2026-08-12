@@ -21,6 +21,7 @@ from src.config import WebSettings
 from src.events import (
     DebugDetection,
     Event,
+    FrameCaptured,
     ImageUnavailable,
     MonitorError,
     MonitoringStarted,
@@ -171,6 +172,19 @@ class WebNotifier(BaseNotifier):
                 message=event.reason,
             )
             self._state["printer"]["uptime_seconds"] = event.uptime_seconds
+        elif isinstance(event, FrameCaptured):
+            await self._store_frame(event.image, event.captured_at)
+            self._state.update(
+                connection="online",
+                message="",
+                consecutive_failures=0,
+                current_detection=None,
+            )
+            self._state["printer"] = {
+                "state": event.state.value,
+                "detail": "Inspecting fresh camera frame…",
+                "uptime_seconds": event.uptime_seconds,
+            }
         elif isinstance(event, StatusUpdate):
             self._pending_ack = None
             self._state.update(
