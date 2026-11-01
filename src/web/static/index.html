@@ -3,154 +3,161 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b0d0f">
+  <meta name="theme-color" content="#0a0b0d">
   <title>Scythe — Printer Monitor</title>
-  <link rel="stylesheet" href="/style.css">
-  <script src="/app.js" defer></script>
+  <link rel="icon" type="image/svg+xml" href="/logo.svg">
+  <link rel="stylesheet" href="/style.css?v=4">
+  <script src="/app.js?v=3" defer></script>
 </head>
 <body>
-  <div class="console-shell">
-    <header class="machine-spine">
-      <a class="brand" href="/" aria-label="Scythe dashboard">
-        <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
-          <path d="M9 12c12-8 24-7 32-1-14-2-24 3-30 14" />
-          <path d="M30 10 18 39" />
-        </svg>
-        <span>SCYTHE</span>
-      </a>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Scythe dashboard">
+      <img class="brand-mark" src="/logo.svg" alt="">
+      <span>Scythe</span>
+    </a>
+    <span class="status-pill" id="printer-pill"><i></i><span id="printer-state">Connecting</span></span>
+    <button class="switch" id="debug-detection-button" type="button" role="switch" aria-checked="false">
+      Detect while idle <b aria-hidden="true"></b>
+    </button>
+    <button class="icon-button topbar-icon" id="settings-button" type="button" aria-label="Settings" title="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></svg>
+    </button>
+  </header>
 
-      <div class="spine-status">
-        <div class="status-line">
-          <span class="status-dot" id="connection-dot"></span>
-          <span id="connection-label">CONNECTING</span>
-        </div>
-      </div>
+  <dialog class="settings" id="settings-dialog" aria-labelledby="settings-title">
+    <form id="settings-form" method="dialog">
+      <header class="settings-head">
+        <h2 id="settings-title">Settings</h2>
+        <button class="icon-button" type="button" id="settings-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+        </button>
+      </header>
 
-      <dl class="machine-facts">
-        <div>
-          <dt>Printer</dt>
-          <dd id="printer-state">Unknown</dd>
-        </div>
-        <div>
-          <dt>Monitor uptime</dt>
-          <dd id="uptime">Not available</dd>
-        </div>
-        <div>
-          <dt>Last frame</dt>
-          <dd id="last-frame">Waiting</dd>
-        </div>
-        <div>
-          <dt>Next scan</dt>
-          <dd id="next-scan">Not available</dd>
-        </div>
-      </dl>
-
-      <p class="cadence-note">
-        Camera updates follow the configured inspection interval. This is not a live stream.
-      </p>
-    </header>
-
-    <main class="workspace">
-      <div class="system-banner" id="system-banner" role="status" hidden>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5m0 3.5v.5M4.2 19h15.6L12 4 4.2 19Z" /></svg>
-        <span id="system-message"></span>
-      </div>
-
-      <section class="camera-panel" aria-labelledby="camera-heading">
-        <div class="panel-heading">
-          <div>
-            <h1 id="camera-heading">Camera inspection</h1>
-            <p id="frame-detail">Waiting for the first monitor frame</p>
+      <div class="settings-body">
+        <section class="field-group">
+          <h3>Detection</h3>
+          <div class="segmented" role="radiogroup" aria-label="Detection backend">
+            <label><input type="radio" name="backend" value="decision"><span>Decision model</span></label>
+            <label><input type="radio" name="backend" value="yolo"><span>Local YOLO model</span></label>
           </div>
-          <button class="overlay-toggle" id="overlay-toggle" type="button" aria-pressed="true">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V3h4M17 3h4v4M21 17v4h-4M7 21H3v-4M8 8h8v8H8z" /></svg>
-            Overlay
-          </button>
-        </div>
+          <label class="check"><input type="checkbox" name="pause_on_failure"> Pause the print when a failure is detected</label>
+        </section>
 
-        <div class="camera-stage" id="camera-stage">
-          <div class="camera-empty" id="camera-empty">
-            <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 15h8l3-4h10l3 4h8v24H8z"/><circle cx="24" cy="27" r="8"/></svg>
-            <strong>Waiting for camera</strong>
-            <span>The first frame appears after the monitor completes an inspection.</span>
+        <section class="field-group" data-backend="decision">
+          <h3>Decision model</h3>
+          <div class="field-row">
+            <label class="field">
+              <span>Provider</span>
+              <select name="provider">
+                <option value="openrouter">OpenRouter</option>
+                <option value="ollama">Self-hosted (Ollama)</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Endpoint</span>
+              <input name="base_url" type="url" autocomplete="off" spellcheck="false">
+            </label>
           </div>
-          <img id="camera-image" src="/api/frame.jpg" alt="Latest printer camera frame" hidden>
-          <svg class="detection-overlay" id="detection-overlay" aria-label="Detection overlay"></svg>
-          <div class="frame-stamp" id="frame-stamp" hidden>FRAME WAITING</div>
-        </div>
-
-        <div class="cadence-track" aria-label="Time until next inspection">
-          <div class="cadence-fill" id="cadence-fill"></div>
-        </div>
-      </section>
-
-      <aside class="detection-rail" aria-labelledby="detection-heading">
-        <section class="verdict-block">
-          <h2 id="detection-heading">Detection verdict</h2>
-          <div class="verdict" id="verdict">
-            <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3 34 9v10c0 9-6 15-14 18C12 34 6 28 6 19V9l14-6Z"/><path d="m13 20 5 5 10-11"/></svg>
-            <div>
-              <strong id="verdict-title">Waiting</strong>
-              <span id="verdict-detail">No inspection result yet</span>
+          <label class="field" data-provider="openrouter">
+            <span>API key</span>
+            <input name="api_key" type="password" autocomplete="off" spellcheck="false">
+            <small id="api-key-hint"></small>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Model</span>
+              <input name="model" list="model-options" autocomplete="off" spellcheck="false">
+              <datalist id="model-options"></datalist>
+            </label>
+            <label class="field field-narrow">
+              <span>Alert threshold</span>
+              <input name="threshold" type="number" min="0.05" max="1" step="0.05">
+            </label>
+          </div>
+          <div class="field">
+            <span>Crop to the part <small>drag on the frame · makes small failures visible</small></span>
+            <div class="crop-picker" id="crop-picker">
+              <img id="crop-image" alt="Latest camera frame for choosing the crop">
+              <div class="crop-rect" id="crop-rect" hidden></div>
+              <p class="crop-empty" id="crop-empty">No camera frame yet.</p>
+            </div>
+            <div class="crop-actions">
+              <small id="crop-label">Full frame</small>
+              <button class="link-button" type="button" id="crop-clear">Use full frame</button>
             </div>
           </div>
         </section>
 
-        <section class="boxes-block">
-          <div class="section-title-row">
-            <h2>Detection boxes</h2>
-            <span class="count-badge" id="box-count">0</span>
-          </div>
-          <div class="box-list" id="box-list">
-            <p class="empty-copy">No detections in the current frame.</p>
-          </div>
+        <section class="field-group" data-backend="yolo">
+          <h3>Local model</h3>
+          <label class="field field-narrow">
+            <span>Minimum confidence</span>
+            <input name="yolo_confidence" type="number" min="0.05" max="1" step="0.05">
+          </label>
         </section>
 
-        <section class="last-detection" id="last-detection" hidden>
-          <h2>Latest alert</h2>
-          <dl>
-            <div><dt>Detected</dt><dd id="detected-at">Not available</dd></div>
-            <div><dt>Boxes</dt><dd id="latest-count">0</dd></div>
-            <div><dt>Peak confidence</dt><dd id="latest-confidence">0%</dd></div>
-          </dl>
-        </section>
-      </aside>
-
-      <section class="operator-deck" aria-labelledby="controls-heading">
-        <div class="metrics-strip">
-          <h2>Inspection metrics</h2>
-          <dl>
-            <div><dt>Current boxes</dt><dd id="metric-count">0</dd></div>
-            <div><dt>Max confidence</dt><dd id="metric-confidence">Not available</dd></div>
-            <div><dt>Inference</dt><dd id="metric-inference">Not available</dd></div>
-            <div><dt>Interval</dt><dd id="metric-interval">Not available</dd></div>
-          </dl>
-        </div>
-
-        <div class="controls-block">
-          <h2 id="controls-heading">Print control</h2>
-          <div class="control-row">
-            <button class="control-button" id="pause-button" type="button" disabled>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" /></svg>
-              <span>Pause print</span>
-            </button>
-            <button class="control-button control-primary" id="resume-button" type="button" disabled>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z" /></svg>
-              <span>Resume</span>
-            </button>
-            <button class="control-button control-toggle" id="debug-detection-button" type="button" aria-pressed="false">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V3h4M17 3h4v4M21 17v4h-4M7 21H3v-4M8 8h8v8H8z" /></svg>
-              <span>Idle detection: Off</span>
-            </button>
-            <button class="control-button control-alert" id="acknowledge-button" type="button" hidden>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5m0 3.5v.5M4.2 19h15.6L12 4 4.2 19Z" /></svg>
-              <span>Acknowledge detection</span>
-            </button>
+        <section class="field-group">
+          <h3>Rates</h3>
+          <div class="field-row">
+            <label class="field">
+              <span>Capture a frame every</span>
+              <span class="suffix"><input name="capture_interval" type="number" min="5" step="1"><i>s</i></span>
+            </label>
+            <label class="field">
+              <span>Run detection every</span>
+              <span class="suffix"><input name="detection_interval" type="number" min="0" step="1"><i>s</i></span>
+              <small>0 checks every captured frame</small>
+            </label>
           </div>
-          <p class="control-result" id="control-result" aria-live="polite"></p>
-        </div>
-      </section>
-    </main>
+          <p class="estimate" id="settings-estimate" data-backend="decision"></p>
+        </section>
+
+        <p class="env-note" id="env-note" hidden></p>
+      </div>
+
+      <footer class="settings-foot">
+        <p class="settings-error" id="settings-error" role="alert"></p>
+        <button class="button button-ghost" type="button" id="settings-cancel">Cancel</button>
+        <button class="button button-primary" type="submit" id="settings-save">Save</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div class="system-banner" id="system-banner" role="status" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5m0 3.5v.5M4.2 19h15.6L12 4 4.2 19Z" /></svg>
+    <span id="system-message"></span>
   </div>
+
+  <main class="layout">
+    <section class="camera" id="camera-stage" aria-label="Latest camera frame">
+      <div class="camera-empty" id="camera-empty">Waiting for the first camera frame…</div>
+      <img id="camera-image" src="/api/frame.jpg" alt="Latest printer camera frame" hidden>
+      <svg class="detection-overlay" id="detection-overlay" aria-hidden="true"></svg>
+      <div class="frame-chip" id="frame-chip" hidden></div>
+      <button class="icon-button" id="overlay-toggle" type="button" aria-pressed="true" aria-label="Show detection boxes" title="Show detection boxes">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V3h4M17 3h4v4M21 17v4h-4M7 21H3v-4M8 8h8v8H8z" /></svg>
+      </button>
+      <div class="cadence-track" aria-hidden="true"><div class="cadence-fill" id="cadence-fill"></div></div>
+    </section>
+
+    <aside class="side">
+      <section class="card verdict" id="verdict">
+        <div class="eyebrow"><i></i><span id="verdict-eyebrow">Waiting</span></div>
+        <h1 id="verdict-title">No inspection yet</h1>
+        <p class="verdict-detail" id="verdict-detail">Results appear after the first scan.</p>
+        <div class="stat" id="verdict-stat" hidden><b id="verdict-confidence"></b><span>confidence</span></div>
+        <div class="actions">
+          <button class="button button-danger" id="pause-button" type="button" hidden>Pause print</button>
+          <button class="button button-primary" id="resume-button" type="button" hidden>Resume print</button>
+          <button class="button button-ghost" id="acknowledge-button" type="button" hidden>Dismiss — print is fine</button>
+        </div>
+        <p class="control-result" id="control-result" aria-live="polite"></p>
+      </section>
+
+      <section class="card previous" id="last-detection" hidden>
+        <span>Previous alert</span><b id="last-detection-summary"></b>
+      </section>
+    </aside>
+  </main>
 </body>
 </html>

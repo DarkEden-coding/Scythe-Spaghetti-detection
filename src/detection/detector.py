@@ -48,6 +48,10 @@ class SpaghettiDetector:
     def model_path(self) -> Path:
         return self._settings.active_model_path
 
+    @property
+    def model_name(self) -> str:
+        return self.model_path.name
+
     # -- lifecycle --------------------------------------------------------- #
 
     def load(self) -> None:

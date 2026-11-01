@@ -17,7 +17,7 @@ from typing import Any
 from aiohttp import web
 from PIL import Image
 
-from src.config import WebSettings
+from src.config import ConfigError, WebSettings
 from src.events import (
     DebugDetection,
     Event,
@@ -32,6 +32,7 @@ from src.events import (
 from src.monitor import DebugDetectionControl
 from src.notify.base import BaseNotifier
 from src.printer.base import PrinterClient
+from src.settings_control import SettingsControl
 
 log = logging.getLogger(__name__)
 STATIC_DIR = Path(__file__).resolve().parent.parent / "web" / "static"
@@ -65,8 +66,10 @@ class WebNotifier(BaseNotifier):
         printer: PrinterClient,
         loop_interval: float,
         debug_detection: DebugDetectionControl,
+        settings_control: SettingsControl | None = None,
     ) -> None:
         self._settings = settings
+        self._settings_control = settings_control
         self._printer = printer
         self._loop_interval = loop_interval
         self._debug_detection = debug_detection
@@ -90,12 +93,15 @@ class WebNotifier(BaseNotifier):
                 web.get("/", self._index),
                 web.get("/style.css", self._static),
                 web.get("/app.js", self._static),
+                web.get("/logo.svg", self._static),
                 web.get("/api/state", self._get_state),
                 web.get("/api/frame.jpg", self._get_frame),
                 web.post("/api/pause", self._pause),
                 web.post("/api/resume", self._resume),
                 web.post("/api/acknowledge", self._acknowledge),
                 web.post("/api/debug-detection", self._set_debug_detection),
+                web.get("/api/settings", self._get_settings),
+                web.post("/api/settings", self._update_settings),
                 web.get("/api/healthz", self._health),
             ]
         )
@@ -285,7 +291,11 @@ class WebNotifier(BaseNotifier):
         return {
             "revision": self._revision,
             "server_time": time(),
-            "loop_interval": self._loop_interval,
+            "loop_interval": (
+                self._settings_control.settings.target_loop_time
+                if self._settings_control
+                else self._loop_interval
+            ),
             "connection": self._state["connection"],
             "message": self._state["message"],
             "consecutive_failures": self._state["consecutive_failures"],
@@ -357,6 +367,31 @@ class WebNotifier(BaseNotifier):
             self._state.update(current_detection=None, message="")
         self._revision += 1
         return web.json_response({"ok": True, "enabled": enabled})
+
+    async def _get_settings(self, _request: web.Request) -> web.Response:
+        """Return editable detection settings, without the API key."""
+        if self._settings_control is None:
+            raise web.HTTPNotFound(text="Settings can't be changed from the dashboard.")
+        return web.json_response(
+            self._settings_control.public(), headers={"Cache-Control": "no-store"}
+        )
+
+    async def _update_settings(self, request: web.Request) -> web.Response:
+        """Apply and save detection settings from the dashboard."""
+        if self._settings_control is None:
+            raise web.HTTPNotFound(text="Settings can't be changed from the dashboard.")
+        try:
+            payload = await request.json()
+        except ValueError as exc:
+            raise web.HTTPBadRequest(text="Expected a JSON request body.") from exc
+        if not isinstance(payload, dict):
+            raise web.HTTPBadRequest(text="Expected a JSON object.")
+        try:
+            settings = await self._settings_control.update(payload)
+        except ConfigError as exc:
+            return web.json_response({"ok": False, "error": str(exc)}, status=400)
+        self._revision += 1
+        return web.json_response({"ok": True, "settings": settings})
 
     async def _health(self, _request: web.Request) -> web.Response:
         """Return a cheap process health response."""

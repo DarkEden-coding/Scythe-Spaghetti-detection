@@ -90,7 +90,17 @@ This validates the config, reads the print state, resolves the webcam, and pulls
 | `detection.use_onnx` | `true` | Use the ONNX runtime — much faster on a Pi. |
 | `detection.min_confidence` | `0.6` | Raise for fewer false positives, lower for fewer misses. |
 | `detection.save_annotated_frames` | `true` | Keep failure frames in `data/detections/`. |
-| `target_loop_time` | `30` | Seconds between checks. |
+| `detection.backend` | `yolo` | `yolo` runs the bundled model locally; `decision` asks a decision model (see below). |
+| `detection.interval` | `0` | Seconds between detections. `0` checks every captured frame. |
+| `detection.decision.provider` | `openrouter` | `openrouter`, or `ollama` for a self-hosted model. |
+| `detection.decision.base_url` | — | Endpoint override. Empty uses the provider's default. |
+| `detection.decision.api_key` | — | OpenRouter key. Or set `SCYTHE_DETECTION_DECISION_API_KEY`. |
+| `detection.decision.model` | `~liquid/d1-ultra-latest` | Decision model id. |
+| `detection.decision.threshold` | `0.6` | Flag a failure when any answer's probability reaches this. |
+| `detection.decision.crop` | — | Crop around the part as `left,top,right,bottom` fractions. Easier to set by dragging in the dashboard. |
+| `detection.decision.image_max_side` | `1024` | Longest side of the image sent, in pixels. |
+| `detection.decision.request_timeout` | `30` | Seconds before a request gives up. |
+| `target_loop_time` | `30` | Seconds between camera frames. |
 | `pause_on_spaghetti` | `true` | Pause the print when a failure is detected. |
 | `enable_auto_update` | `false` | Pull updates from git on start. |
 | `log_level` | `INFO` | `DEBUG` when reporting a bug. |
@@ -101,6 +111,18 @@ python3 -m src env       # lists them all
 export SCYTHE_DISCORD_BOT_TOKEN=...
 ```
 Precedence is defaults → `settings.json` → environment.
+
+### Decision models
+Instead of the bundled YOLO model, Scythe can ask a [decision model](https://openrouter.ai/docs/guides/community/jev) about each frame: whether the print shows any failure, and whether it has a layer shift. Each answer is a probability, and a failure is reported when either one reaches the alert threshold.
+
+Set it up from the dashboard: open **Settings** (the gear in the top bar), choose **Decision model**, paste an [OpenRouter API key](https://openrouter.ai/settings/keys), and drag a box around the part on the camera frame. Changes apply immediately and are saved to `settings.json`; the key is never sent back to the browser.
+
+- **Model.** The default, Liquid d1-ultra, did best in testing on a real printer: it caught almost every layer-shifted frame in good light and was the most reliable cloud model in the dark. Jev 1.14 is as good in the light at about twice the price.
+- **Crop.** Cropping to the part mattered more than the model. Without it, small failures are lost in the frame.
+- **Rates.** *Capture every* sets how often the camera frame refreshes; *run detection every* sets how often a frame is sent to the model. The panel shows the expected cost per print-hour, which is about $0.003 at one detection a minute with d1-ultra. Nothing is sent while the printer is idle.
+- **Threshold.** Probabilities aren't calibrated the same way across models, so check the threshold against your own prints. `log_level: DEBUG` logs every score.
+- **Light the bed.** No model was reliable on dark frames.
+- **Self-hosting.** Choose the *Self-hosted (Ollama)* provider to use a decision model served by [Ollama](https://ollama.com) (default endpoint `http://localhost:11434/v1/systemone`, no key needed). `d3:4b` gave good results in testing on a desktop GPU.
 
 ### Upgrading from an older version
 If you already have a `settings.py`, your values are imported automatically the first time you run `scythe configure` (the file is parsed, never executed). **Delete `settings.py` afterwards — it still contains your bot token.**

@@ -166,7 +166,7 @@ def cmd_run(args: argparse.Namespace) -> int:
             log.info("Code changed; restarting into the new version.")
             _restart()
 
-    return Application(settings).run()
+    return Application(settings, config_path=args.config).run()
 
 
 def _restart() -> None:

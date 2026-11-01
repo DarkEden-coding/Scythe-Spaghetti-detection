@@ -24,8 +24,10 @@ from PIL import Image
 from src import paths
 from src.config import Settings
 from src.detection.annotate import draw_boxes
+from src.detection.decision import DecisionDetector
 from src.detection.detector import SpaghettiDetector
 from src.detection.results import DetectionResult
+from src.detection.switchable import SwitchableDetector
 from src.errors import ScytheError
 from src.events import (
     DebugDetection,
@@ -84,7 +86,7 @@ class MonitorLoop:
     def __init__(
         self,
         printer: PrinterClient,
-        detector: SpaghettiDetector,
+        detector: SpaghettiDetector | DecisionDetector | SwitchableDetector,
         notifier: Notifier,
         settings: Settings,
         debug_detection: DebugDetectionControl | None = None,
@@ -99,6 +101,7 @@ class MonitorLoop:
         self._stop = asyncio.Event()
         self._image_failures = 0
         self._error_failures = 0
+        self._last_detection_at: float | None = None
 
     # -- control ----------------------------------------------------------- #
 
@@ -119,7 +122,7 @@ class MonitorLoop:
             MonitoringStarted(
                 target_loop_time=self._settings.target_loop_time,
                 printer_url=self._settings.printer.base_url,
-                model_name=self._detector.model_path.name,
+                model_name=self._detector.model_name,
             )
         )
 
@@ -166,6 +169,20 @@ class MonitorLoop:
         with contextlib.suppress(asyncio.TimeoutError):
             await asyncio.wait_for(self._stop.wait(), timeout=remaining)
 
+    def _seconds_until_detection(self) -> float:
+        """How long until detection is due again; ``0`` means run it now.
+
+        Frames arrive every ``target_loop_time`` with some jitter, so a frame
+        that lands up to half an interval early still counts as due. Otherwise
+        a 60 s detection interval on 30 s captures would drift to 90 s.
+        """
+        interval = self._settings.detection.interval
+        if interval <= 0 or self._last_detection_at is None:
+            return 0.0
+        slack = self._settings.target_loop_time / 2
+        remaining = interval - (monotonic() - self._last_detection_at)
+        return remaining if remaining > slack else 0.0
+
     # -- one iteration ----------------------------------------------------- #
 
     async def _tick(self) -> None:
@@ -189,6 +206,20 @@ class MonitorLoop:
                 )
             )
             return
+
+        wait = self._seconds_until_detection()
+        if wait > 0:
+            await self._notifier.notify(
+                StatusUpdate(
+                    uptime_seconds=self.uptime,
+                    state=state,
+                    image=image,
+                    detail=f"Frame captured; next detection in {wait:.0f}s.",
+                    captured_at=captured_at,
+                )
+            )
+            return
+        self._last_detection_at = monotonic()
 
         await self._notifier.notify(
             FrameCaptured(
