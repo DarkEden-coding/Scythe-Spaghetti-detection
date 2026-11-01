@@ -119,6 +119,13 @@ class TestValidation:
         with pytest.raises(ConfigError, match="bot_token"):
             settings.discord.validate()
 
+    def test_discord_optional_with_dashboard(self):
+        settings = Settings()
+        settings.validate()
+        settings.web.enabled = False
+        with pytest.raises(ConfigError, match="bot_token"):
+            settings.validate()
+
     def test_url_must_have_a_scheme(self):
         settings = Settings()
         settings.printer.url = "mainsailos.local"

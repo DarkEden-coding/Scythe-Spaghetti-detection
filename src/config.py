@@ -72,6 +72,11 @@ class DiscordSettings:
     #: ``0`` waits forever.
     acknowledge_timeout: float = 0.0
 
+    @property
+    def enabled(self) -> bool:
+        """An empty token turns Discord off; the dashboard still works."""
+        return bool(self.bot_token)
+
     def validate(self) -> None:
         if self.bot_token in PLACEHOLDERS:
             raise ConfigError(
@@ -303,7 +308,10 @@ class Settings:
             "CRITICAL",
         }:
             raise ConfigError(f"Unknown log_level {self.log_level!r}.")
-        self.discord.validate()
+        # Discord is optional when the dashboard is on, so there is always
+        # somewhere for alerts to go.
+        if self.discord.enabled or not self.web.enabled:
+            self.discord.validate()
         self.printer.validate()
         self.detection.validate()
         self.web.validate()

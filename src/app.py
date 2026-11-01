@@ -54,7 +54,9 @@ def build_notifier(
     """
     from src.notify.discord_notifier import DiscordNotifier
 
-    channels: list[Notifier] = [DiscordNotifier(settings.discord, printer)]
+    channels: list[Notifier] = []
+    if settings.discord.enabled:
+        channels.append(DiscordNotifier(settings.discord, printer))
     if settings.web.enabled:
         from src.notify.web_notifier import WebNotifier
 

@@ -75,7 +75,7 @@ This validates the config, reads the print state, resolves the webcam, and pulls
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `discord.bot_token` | — | Your bot token. |
+| `discord.bot_token` | — | Your bot token. Leave empty to run with only the web dashboard. |
 | `discord.log_channel_id` | — | Channel the bot posts to. |
 | `discord.ping_user_id` | — | Who gets pinged on a failure. |
 | `discord.status_update_mode` | `edit` | `edit` keeps one status message current, `message` posts a new one each loop, `silent` posts none. |
