@@ -232,17 +232,23 @@ class WebNotifier(BaseNotifier):
                 "paused": False if is_debug else event.paused,
                 "pause_requested": False if is_debug else event.pause_requested,
                 "boxes": boxes,
+                "label": result.label,
+                "scores": [
+                    {"name": name, "score": score} for name, score in result.scores
+                ],
             }
             self._state.update(
                 connection="online",
-                message=("Idle debug detection." if is_debug else "Spaghetti detected."),
+                message=(
+                    "Idle debug detection." if is_debug else f"{result.label} detected."
+                ),
                 current_detection=detection,
                 last_detection=detection,
             )
             if is_debug:
                 self._state["printer"] = {
                     "state": event.state.value,
-                    "detail": "Idle debug detection found spaghetti.",
+                    "detail": f"Idle debug detection found: {result.label.lower()}.",
                     "uptime_seconds": event.uptime_seconds,
                 }
             else:

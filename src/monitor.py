@@ -247,7 +247,7 @@ class MonitorLoop:
                         state=state,
                         image=image,
                         detail=(
-                            "Idle debug detection — no spaghetti "
+                            "Idle debug detection — no failure "
                             f"({result.duration_seconds:.1f}s inference)."
                         ),
                         captured_at=captured_at,
@@ -261,7 +261,7 @@ class MonitorLoop:
                     uptime_seconds=self.uptime,
                     state=state,
                     image=image,
-                    detail=f"No spaghetti ({result.duration_seconds:.1f}s inference).",
+                    detail=f"No failure ({result.duration_seconds:.1f}s inference).",
                     captured_at=captured_at,
                 )
             )

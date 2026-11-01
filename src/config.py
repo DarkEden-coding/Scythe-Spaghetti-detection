@@ -168,7 +168,7 @@ class DecisionSettings:
     #: the frame, e.g. ``0.32,0.21,0.93,0.61``. Empty sends the full frame.
     crop: str = ""
     #: Longest side of the image sent to the model, in pixels.
-    image_max_side: int = 1024
+    image_max_side: int = 1240
     request_timeout: float = 30.0
 
     def validate(self, require_key: bool = True) -> None:

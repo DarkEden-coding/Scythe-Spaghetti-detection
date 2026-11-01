@@ -1,9 +1,8 @@
 """Cost estimates for decision-model detection.
 
 The per-request costs were measured in the print-failure evaluation, sending a
-part crop enlarged to 1240 px with the same two questions this project asks.
-Smaller images cost less, so these are on the high side for the default
-1024 px. Once the detector has made real requests, their reported cost is used
+part crop enlarged to 1240 px (the default image size) with the same context
+and two questions this project asks. Once the detector has made real requests, their reported cost is used
 instead.
 """
 

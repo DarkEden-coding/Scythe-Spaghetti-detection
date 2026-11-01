@@ -12,7 +12,8 @@ Hello, thanks for checking out my project! This is a **simple and lightweight** 
 - [x] *Open Source*
 - [x] *Self Hosted*
 - [x] **Linux and Windows Support**
-- [x] **YOLOv8 Object Detection**
+- [x] **YOLOv8 Object Detection** (spaghetti)
+- [x] **Decision-model detection** via OpenRouter or self-hosted Ollama (spaghetti, stringing, under-extrusion, warping, layer shifts, layer cracking, parts knocked loose)
 - [x] *Large Model Trained*
 - [x] Any Linux or Windows-based system support (theoretically, not yet tested, should only require Python support)
 - [ ] XL Model Trained
@@ -98,7 +99,7 @@ This validates the config, reads the print state, resolves the webcam, and pulls
 | `detection.decision.model` | `~liquid/d1-ultra-latest` | Decision model id. |
 | `detection.decision.threshold` | `0.6` | Flag a failure when any answer's probability reaches this. |
 | `detection.decision.crop` | — | Crop around the part as `left,top,right,bottom` fractions. Easier to set by dragging in the dashboard. |
-| `detection.decision.image_max_side` | `1024` | Longest side of the image sent, in pixels. |
+| `detection.decision.image_max_side` | `1240` | Longest side of the image sent, in pixels. 1240 matches the evaluation. |
 | `detection.decision.request_timeout` | `30` | Seconds before a request gives up. |
 | `target_loop_time` | `30` | Seconds between camera frames. |
 | `pause_on_spaghetti` | `true` | Pause the print when a failure is detected. |
@@ -113,7 +114,19 @@ export SCYTHE_DISCORD_BOT_TOKEN=...
 Precedence is defaults → `settings.json` → environment.
 
 ### Decision models
-Instead of the bundled YOLO model, Scythe can ask a [decision model](https://openrouter.ai/docs/guides/community/jev) about each frame: whether the print shows any failure, and whether it has a layer shift. Each answer is a probability, and a failure is reported when either one reaches the alert threshold.
+The bundled YOLO model only knows spaghetti. Instead, Scythe can ask a [decision model](https://openrouter.ai/docs/guides/community/jev) about each frame, which catches more kinds of failure:
+
+| Failure | YOLO | Decision model |
+| --- | :-: | :-: |
+| Spaghetti | ✓ | ✓ |
+| Stringing | | ✓ |
+| Under-extrusion | | ✓ |
+| Warping | | ✓ |
+| Layer shift | | ✓ (tested on real prints) |
+| Layer cracking | | ✓ |
+| Part knocked loose | | ✓ |
+
+Each frame gets two yes/no questions, worded exactly as in the evaluation: whether the print shows any of the failures above (ignoring nozzle blobs, purge lines, brims and supports), and whether it has a layer shift. Each answer is a probability, and a failure is reported when either one reaches the alert threshold. Discord and dashboard alerts say which one fired (*Layer shift detected!* or *Print failure detected!*) and show both scores.
 
 Set it up from the dashboard: open **Settings** (the gear in the top bar), choose **Decision model**, paste an [OpenRouter API key](https://openrouter.ai/settings/keys), and drag a box around the part on the camera frame. Changes apply immediately and are saved to `settings.json`; the key is never sent back to the browser.
 

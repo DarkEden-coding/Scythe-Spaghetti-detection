@@ -139,14 +139,14 @@ function renderDetection(payload) {
   const latest = payload.last_detection;
 
   if (current) {
-    const regions = `${current.count} ${current.count === 1 ? "region" : "regions"}`;
+    const found = detectionSummary(current);
+    const title = `Possible ${(current.label || "spaghetti").toLowerCase()}`;
     if (current.debug) {
-      setVerdict("debug", "Idle detection", "Possible spaghetti",
-        `${regions} flagged · no alert sent`, current.max_confidence);
+      setVerdict("debug", "Idle detection", title, `${found} · no alert sent`, current.max_confidence);
     } else {
-      setVerdict("alert", "Failure detected", "Possible spaghetti",
-        current.paused ? `${regions} flagged · print paused automatically`
-          : `${regions} flagged at ${formatTime(current.detected_at)}`,
+      setVerdict("alert", "Failure detected", title,
+        current.paused ? `${found} · print paused automatically`
+          : `${found} · ${formatTime(current.detected_at)}`,
         current.max_confidence);
     }
   } else if (payload.frame) {
@@ -162,8 +162,20 @@ function renderDetection(payload) {
   elements["last-detection"].hidden = !showPrevious;
   if (showPrevious) {
     elements["last-detection-summary"].textContent =
-      `${formatShortTime(latest.detected_at)} · ${formatPercent(latest.max_confidence)}`;
+      `${latest.label || "Spaghetti"} · ${formatShortTime(latest.detected_at)} · ${formatPercent(latest.max_confidence)}`;
   }
+}
+
+const scoreNames = { any_failure: "any failure", layer_shift: "layer shift" };
+
+// Decision models report a score per question; YOLO reports regions.
+function detectionSummary(detection) {
+  if (detection.scores?.length) {
+    return detection.scores
+      .map(({ name, score }) => `${scoreNames[name] || name} ${formatPercent(score)}`)
+      .join(" · ");
+  }
+  return `${detection.count} ${detection.count === 1 ? "region" : "regions"} flagged`;
 }
 
 function renderControls(payload) {
@@ -399,7 +411,7 @@ function renderEstimate() {
     const known = settingsData.models.find((item) => item.id === model);
     if (known) {
       cost = known.cost_per_request;
-      source = "measured in testing at 1240 px, so likely a little high";
+      source = "measured in testing at 1240 px";
     }
   }
   const rate = `<b>${Math.round(perHour)}</b> detections per print-hour`;

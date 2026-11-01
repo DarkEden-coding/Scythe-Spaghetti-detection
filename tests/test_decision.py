@@ -74,6 +74,8 @@ class TestDetect:
         assert result
         assert result.max_confidence == 0.75
         assert result.boxes[0].as_tuple() == (0, 0, 1024, 576)
+        assert result.label == "Layer shift"
+        assert result.scores == (("layer_shift", 0.75), ("any_failure", 0.2))
 
     def test_clear_below_threshold_keeps_score(self, settings, frame):
         session = FakeSession(answers(0.3, 0.1))
@@ -95,7 +97,7 @@ class TestDetect:
         assert request["headers"]["Authorization"] == "Bearer sk-test"
         encoded = detector.encode(frame, (256, 144, 768, 288))
         with Image.open(io.BytesIO(encoded)) as sent:
-            assert max(sent.size) >= 1024 and min(sent.size) >= 256
+            assert max(sent.size) == 1240 and min(sent.size) >= 256
 
     def test_ollama_request_format(self, settings, frame):
         settings.decision.provider = "ollama"

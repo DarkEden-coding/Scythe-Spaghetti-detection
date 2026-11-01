@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#0a0b0d">
   <title>Scythe — Printer Monitor</title>
   <link rel="icon" type="image/svg+xml" href="/logo.svg">
-  <link rel="stylesheet" href="/style.css?v=4">
-  <script src="/app.js?v=3" defer></script>
+  <link rel="stylesheet" href="/style.css?v=5">
+  <script src="/app.js?v=4" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -39,6 +39,19 @@
           <div class="segmented" role="radiogroup" aria-label="Detection backend">
             <label><input type="radio" name="backend" value="decision"><span>Decision model</span></label>
             <label><input type="radio" name="backend" value="yolo"><span>Local YOLO model</span></label>
+          </div>
+          <div class="modes" data-backend="decision">
+            <span>Catches</span>
+            <ul>
+              <li>Spaghetti</li><li>Stringing</li><li>Under-extrusion</li><li>Warping</li>
+              <li>Layer shift</li><li>Layer cracking</li><li>Part knocked loose</li>
+            </ul>
+            <small>Tested on real prints for layer shifts only. Ignores nozzle blobs, purge lines, brims and supports.</small>
+          </div>
+          <div class="modes" data-backend="yolo">
+            <span>Catches</span>
+            <ul><li>Spaghetti</li></ul>
+            <small>Switch to a decision model to also catch layer shifts, warping and other failures.</small>
           </div>
           <label class="check"><input type="checkbox" name="pause_on_failure"> Pause the print when a failure is detected</label>
         </section>

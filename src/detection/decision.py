@@ -30,9 +30,11 @@ log = logging.getLogger(__name__)
 
 CONTEXT = "Camera image of a 3D printer during or after a print."
 
-#: The prompts that scored best in the print-failure evaluation: the tuned
-#: any-failure list from the public-dataset search, and the layer-shift
-#: question that separated shifted from clean frames on this printer.
+#: Context, questions and wording are copied verbatim from the print-failure
+#: evaluation (``config/search/r_s3_img384.yaml`` and
+#: ``scripts/printer_layer_shift.py``) so the measured accuracy carries over:
+#: the tuned any-failure list from the public-dataset search, and the
+#: layer-shift question that separated shifted from clean frames on a printer.
 QUESTIONS = {
     "any_failure": {
         "type": "noul",
@@ -55,6 +57,9 @@ QUESTIONS = {
         ),
     },
 }
+
+#: Message label for each question when it is the one that fired.
+LABELS = {"any_failure": "Print failure", "layer_shift": "Layer shift"}
 
 #: Image models reject images with a side under 256 px.
 MIN_SIDE = 280
@@ -130,7 +135,8 @@ class DecisionDetector:
         region = self.region(image)
         scores = self._ask(base64.b64encode(self.encode(image, region)).decode())
 
-        score = max(scores.values())
+        ranked = tuple(sorted(scores.items(), key=lambda item: item[1], reverse=True))
+        top, score = ranked[0]
         box = DetectionBox(
             *region,
             confidence=round(score, 4),
@@ -146,6 +152,8 @@ class DecisionDetector:
             image=image.copy(),
             duration_seconds=perf_counter() - started,
             considered=(box,),
+            label=LABELS[top],
+            scores=ranked,
         )
 
     def _request(self, jpeg_b64: str) -> tuple[dict, dict[str, str]]:
