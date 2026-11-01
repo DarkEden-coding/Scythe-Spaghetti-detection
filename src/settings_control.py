@@ -1,8 +1,9 @@
 """Runtime-editable detection settings, for the dashboard's settings panel.
 
-Only detection and pacing settings are editable here. Each change is validated,
-applied to the running monitor (swapping the detector if needed), and merged
-into the config file so it survives a restart.
+Detection, pacing and Discord settings are editable here. Each change is
+validated, applied to the running monitor (swapping the detector if needed),
+and merged into the config file so it survives a restart. Discord changes
+need a restart, which the dashboard offers after saving.
 """
 
 from __future__ import annotations
@@ -39,7 +40,19 @@ FIELDS: dict[str, tuple[str, type]] = {
     "image_max_side": ("detection.decision.image_max_side", int),
     "yolo_confidence": ("detection.min_confidence", float),
     "pause_on_failure": ("pause_on_spaghetti", bool),
+    "discord_token": ("discord.bot_token", str),
+    "discord_channel_id": ("discord.log_channel_id", int),
+    "discord_user_id": ("discord.ping_user_id", int),
+    "discord_status_mode": ("discord.status_update_mode", str),
 }
+
+#: Secrets: never returned, and a blank value keeps the saved one.
+SECRETS = ("api_key", "discord_token")
+
+
+def _hint(secret: str) -> str:
+    return f"…{secret[-4:]}" if len(secret) >= 8 else ""
+
 
 #: Below this the camera and the API are polled faster than is useful.
 MIN_INTERVAL = 5.0
@@ -98,6 +111,8 @@ class SettingsControl:
         self._config_path = config_path
         self._env = os.environ if env is None else env
         self._lock = asyncio.Lock()
+        #: Saved Discord settings differ from the ones the bot started with.
+        self.restart_required = False
 
     @property
     def settings(self) -> Settings:
@@ -126,12 +141,16 @@ class SettingsControl:
             name: _get(self._settings, path) for name, (path, _kind) in FIELDS.items()
         }
         key = values.pop("api_key")
+        token = values.pop("discord_token")
         env_names = env_var_names()
         estimate = self.estimate()
         return {
             "values": values,
             "api_key_set": bool(key),
-            "api_key_hint": f"…{key[-4:]}" if len(key) >= 8 else "",
+            "api_key_hint": _hint(key),
+            "discord_token_set": bool(token),
+            "discord_token_hint": _hint(token),
+            "restart_required": self.restart_required,
             "env_locked": sorted(
                 name
                 for name, (path, _kind) in FIELDS.items()
@@ -168,8 +187,8 @@ class SettingsControl:
             persisted: dict[str, Any] = {}
             for name, raw in changes.items():
                 path, kind = FIELDS[name]
-                if name == "api_key" and not str(raw).strip():
-                    continue  # blank means "keep the saved key"
+                if name in SECRETS and not str(raw).strip():
+                    continue  # blank means "keep the saved secret"
                 try:
                     value = _coerce(raw, kind)
                 except (TypeError, ValueError) as exc:
@@ -193,6 +212,8 @@ class SettingsControl:
             # Decision settings can be prepared before switching backends, so
             # check them even while YOLO is active. The key can come later.
             candidate.detection.decision.validate(require_key=False)
+            if candidate.discord.enabled:
+                candidate.discord.validate()
 
             if candidate.detection != self._settings.detection:
                 try:
@@ -206,6 +227,11 @@ class SettingsControl:
             self._settings.detection = candidate.detection
             self._settings.target_loop_time = candidate.target_loop_time
             self._settings.pause_on_spaghetti = candidate.pause_on_spaghetti
+            if candidate.discord != self._settings.discord:
+                # The bot keeps its connection until restart; the new values
+                # are saved and shown, and the dashboard offers a restart.
+                self._settings.discord = candidate.discord
+                self.restart_required = True
             if persisted:
                 await asyncio.to_thread(save_overrides, persisted, self._config_path)
         return self.public()

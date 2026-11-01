@@ -94,6 +94,7 @@ class WebNotifier(BaseNotifier):
                 web.get("/style.css", self._static),
                 web.get("/app.js", self._static),
                 web.get("/logo.svg", self._static),
+                web.get("/discord-guide/{name:[a-z0-9-]+\\.svg}", self._static),
                 web.get("/api/state", self._get_state),
                 web.get("/api/frame.jpg", self._get_frame),
                 web.post("/api/pause", self._pause),
@@ -102,6 +103,7 @@ class WebNotifier(BaseNotifier):
                 web.post("/api/debug-detection", self._set_debug_detection),
                 web.get("/api/settings", self._get_settings),
                 web.post("/api/settings", self._update_settings),
+                web.post("/api/restart", self._restart),
                 web.get("/api/healthz", self._health),
             ]
         )
@@ -381,6 +383,15 @@ class WebNotifier(BaseNotifier):
         return web.json_response(
             self._settings_control.public(), headers={"Cache-Control": "no-store"}
         )
+
+    async def _restart(self, _request: web.Request) -> web.Response:
+        """Restart the process so saved Discord settings take effect."""
+        from src.cli import restart
+
+        log.info("Restarting at the dashboard's request.")
+        # Let the response reach the browser before the process is replaced.
+        asyncio.get_running_loop().call_later(0.5, restart)
+        return web.json_response({"ok": True})
 
     async def _update_settings(self, request: web.Request) -> web.Response:
         """Apply and save detection settings from the dashboard."""

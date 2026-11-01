@@ -324,6 +324,8 @@ const settingsUi = Object.fromEntries(
     "settings-button", "settings-dialog", "settings-form", "settings-close", "settings-cancel",
     "settings-save", "settings-error", "settings-estimate", "api-key-hint", "model-options",
     "crop-picker", "crop-image", "crop-rect", "crop-empty", "crop-label", "crop-clear", "env-note",
+    "discord-token-hint", "restart-banner", "restart-button", "discord-nudge", "discord-nudge-close",
+    "discord-guide", "guide-close", "guide-back", "guide-next", "guide-count", "invite-link", "invite-text",
   ].map((id) => [id, document.getElementById(id)])
 );
 const settingsForm = settingsUi["settings-form"];
@@ -335,6 +337,8 @@ const fieldLabels = {
   backend: "backend", provider: "provider", base_url: "endpoint", api_key: "API key",
   model: "model", threshold: "alert threshold", crop: "crop", image_max_side: "image size",
   yolo_confidence: "minimum confidence", pause_on_failure: "pause on failure",
+  discord_token: "Discord bot token", discord_channel_id: "Discord channel",
+  discord_user_id: "Discord user", discord_status_mode: "status messages",
 };
 
 function formatMoney(value) {
@@ -440,6 +444,18 @@ function fillSettings(data) {
   settingsUi["api-key-hint"].textContent = data.api_key_set
     ? "Leave blank to keep the saved key."
     : "Required for OpenRouter. Stored in settings.json on this machine.";
+  ["discord_channel_id", "discord_user_id"].forEach((name) => {
+    settingsForm.elements[name].value = values[name] || "";
+  });
+  settingsForm.elements.discord_status_mode.value = values.discord_status_mode;
+  settingsForm.elements.discord_token.value = "";
+  settingsForm.elements.discord_token.placeholder = data.discord_token_set
+    ? `Saved token ${data.discord_token_hint}` : "Leave empty to use only this dashboard";
+  settingsUi["discord-token-hint"].textContent = data.discord_token_set
+    ? "Leave blank to keep the saved token." : "";
+  settingsUi["restart-banner"].hidden = !data.restart_required;
+  settingsUi["discord-nudge"].hidden = data.discord_token_set
+    || localStorage.getItem("scythe.discordNudgeDismissed") === "1";
   cropBox = parseCrop(values.crop);
   renderCrop();
 
@@ -482,6 +498,11 @@ function collectSettings() {
   };
   const key = formValue("api_key").trim();
   if (key) changes.api_key = key;
+  const token = formValue("discord_token").trim();
+  if (token) changes.discord_token = token;
+  changes.discord_channel_id = formValue("discord_channel_id").trim() || 0;
+  changes.discord_user_id = formValue("discord_user_id").trim() || 0;
+  changes.discord_status_mode = formValue("discord_status_mode");
   return changes;
 }
 
@@ -553,6 +574,80 @@ settingsUi["crop-clear"].addEventListener("click", () => {
 });
 
 settingsUi["settings-button"].addEventListener("click", openSettings);
+
+// -- Discord guide ---------------------------------------------------------- //
+
+const guideSteps = [...settingsUi["discord-guide"].querySelectorAll(".guide-step")];
+let guideStep = 0;
+
+// A bot token's first segment is the bot's user id, which is also the
+// application id the invite link needs.
+function inviteUrl() {
+  const token = settingsForm.elements.discord_token.value.trim();
+  try {
+    const id = atob(token.split(".")[0].replace(/-/g, "+").replace(/_/g, "/"));
+    if (!/^\d{15,22}$/.test(id)) return null;
+    return `https://discord.com/oauth2/authorize?client_id=${id}&scope=bot+applications.commands&permissions=117824`;
+  } catch {
+    return null;
+  }
+}
+
+function showGuideStep(index) {
+  guideStep = Math.max(0, Math.min(guideSteps.length - 1, index));
+  guideSteps.forEach((step, i) => { step.hidden = i !== guideStep; });
+  settingsUi["guide-count"].textContent = `${guideStep + 1} of ${guideSteps.length}`;
+  settingsUi["guide-back"].disabled = guideStep === 0;
+  settingsUi["guide-next"].textContent = guideStep === guideSteps.length - 1 ? "Done" : "Next";
+  const url = inviteUrl();
+  settingsUi["invite-link"].hidden = !url;
+  if (url) {
+    settingsUi["invite-link"].href = url;
+    settingsUi["invite-text"].textContent = "Open the link, pick your server and click Authorize. It already asks for the permissions Scythe needs.";
+  }
+}
+
+function openGuide() {
+  showGuideStep(0);
+  settingsUi["discord-guide"].showModal();
+}
+
+document.querySelectorAll("[data-open-guide]").forEach((button) => {
+  button.addEventListener("click", openGuide);
+});
+settingsUi["guide-close"].addEventListener("click", () => settingsUi["discord-guide"].close());
+settingsUi["guide-back"].addEventListener("click", () => showGuideStep(guideStep - 1));
+settingsUi["guide-next"].addEventListener("click", () => {
+  if (guideStep === guideSteps.length - 1) {
+    settingsUi["discord-guide"].close();
+    if (!settingsUi["settings-dialog"].open) openSettings();
+  } else {
+    showGuideStep(guideStep + 1);
+  }
+});
+settingsUi["discord-nudge-close"].addEventListener("click", () => {
+  localStorage.setItem("scythe.discordNudgeDismissed", "1");
+  settingsUi["discord-nudge"].hidden = true;
+});
+settingsUi["restart-button"].addEventListener("click", async () => {
+  const button = settingsUi["restart-button"];
+  button.disabled = true;
+  button.textContent = "Restarting…";
+  try {
+    await fetch("/api/restart", { method: "POST", headers: { "X-Scythe-Request": "1" } });
+  } catch { /* the connection drops as the process restarts */ }
+  // Reload once the dashboard answers again.
+  const poll = setInterval(async () => {
+    try {
+      if ((await fetch("/api/healthz", { cache: "no-store" })).ok) location.reload();
+    } catch { /* still restarting */ }
+  }, 1500);
+  setTimeout(() => clearInterval(poll), 60000);
+});
+fetch("/api/settings", { cache: "no-store" })
+  .then((response) => (response.ok ? response.json() : null))
+  .then((data) => { if (data) fillSettings(data); })
+  .catch(() => {});
 settingsUi["settings-close"].addEventListener("click", () => settingsUi["settings-dialog"].close());
 settingsUi["settings-cancel"].addEventListener("click", () => settingsUi["settings-dialog"].close());
 settingsForm.addEventListener("submit", saveSettings);

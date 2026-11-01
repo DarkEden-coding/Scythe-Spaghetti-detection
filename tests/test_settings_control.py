@@ -74,6 +74,28 @@ class TestUpdate:
         assert settings.detection.decision.api_key == "sk-or-v1-abcdef123456"
         assert settings.detection.decision.model == "typesafe/jev-1.14"
 
+    async def test_discord_change_is_saved_and_needs_restart(
+        self, control, settings, config_file
+    ):
+        settings.discord.bot_token = ""
+        settings.discord.log_channel_id = 0
+        with pytest.raises(ConfigError, match="channel"):
+            await control.update({"discord_token": "MTIz.abc.secret-token"})
+        assert control.restart_required is False
+
+        public = await control.update(
+            {
+                "discord_token": "MTIz.abc.secret-token",
+                "discord_channel_id": "123",
+                "discord_user_id": "456",
+            }
+        )
+
+        assert public["restart_required"] is True
+        assert public["discord_token_hint"] == "…oken"
+        assert "secret-token" not in json.dumps(public)
+        assert json.loads(config_file.read_text())["discord"]["log_channel_id"] == 123
+
     async def test_interval_change_does_not_rebuild_detector(self, control, settings):
         before = control._detector.current
         await control.update({"capture_interval": 20})

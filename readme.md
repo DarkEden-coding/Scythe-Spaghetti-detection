@@ -60,7 +60,7 @@ python3 -m src configure
 ```
 Follow the on screen instructions. Press Enter at any prompt to keep the value in brackets.
 
-2. To get the bot token, follow this guide: https://discordpy.readthedocs.io/en/stable/discord.html
+2. To get the bot token, follow this guide: https://discordpy.readthedocs.io/en/stable/discord.html. The dashboard also has a step-by-step guide: open **Settings → Discord → How do I set this up?**. Discord is optional; leave the token empty to use only the dashboard.
 3. To get the discord channel id and user id enable developer mode (settings -> advanced -> dev mode) in discord and right click the channel/user and click "copy id"
 
 Settings are written to `settings.json`. **That file contains your bot token — it is gitignored, keep it that way.**

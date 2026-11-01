@@ -449,6 +449,50 @@ h1, p { margin: 0; }
 .modes ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; padding: 0; list-style: none; }
 .modes li { padding: 3px 9px; border-radius: 999px; background: var(--bg); color: var(--text); }
 
+.field-group h3 .link-button { float: right; text-transform: none; letter-spacing: 0; font-weight: 500; }
+
+.nudge {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  width: min(300px, calc(100vw - 32px));
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
+  font-size: 13px;
+}
+.nudge p { margin: 6px 0 12px; color: var(--muted); }
+.nudge .button { height: 34px; padding: 0 14px; }
+.nudge-close { position: absolute; top: 8px; right: 8px; margin: 0; background: none; color: var(--muted); backdrop-filter: none; }
+
+.restart-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 16px 0;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
+  border-radius: 10px;
+  color: var(--amber);
+  font-size: 13px;
+}
+.restart-banner[hidden], .nudge[hidden] { display: none; }
+.restart-banner .button { height: 32px; padding: 0 14px; }
+
+.guide { width: min(540px, calc(100vw - 24px)); }
+.guide h2 small { margin-left: 6px; color: var(--muted); font-size: 12px; font-weight: 500; }
+.guide-step h3 { margin: 16px 0 6px; font-size: 14px; }
+.guide-step p { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.guide-step b { color: var(--text); font-weight: 600; }
+.guide-step a:not(.button) { color: var(--amber); }
+.guide-step img { display: block; width: 100%; border-radius: 10px; border: 1px solid var(--line); }
+.guide-note { margin-top: 10px !important; font-size: 12px !important; }
+.guide-invite { display: inline-flex; align-items: center; height: 34px; margin-bottom: 12px; padding: 0 14px; text-decoration: none; }
+
 .env-note { margin: 12px 0 0; color: var(--amber); font-size: 12px; }
 
 .settings-foot { border-top: 1px solid var(--line); }
