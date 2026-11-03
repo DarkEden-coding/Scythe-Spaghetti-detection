@@ -274,6 +274,8 @@ info_tags:
 EOF
     fi
     if [[ -f "$MOONRAKER_ASVC" ]] && ! grep -qx "$SERVICE" "$MOONRAKER_ASVC"; then
+        # The file may lack a final newline; don't glue onto the last entry.
+        [[ -z "$(tail -c 1 "$MOONRAKER_ASVC")" ]] || echo >> "$MOONRAKER_ASVC"
         echo "$SERVICE" >> "$MOONRAKER_ASVC"
     fi
     sudo_run systemctl restart moonraker || warn "Restart Moonraker to see Scythe in the Update panel."

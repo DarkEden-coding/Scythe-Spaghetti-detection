@@ -10,6 +10,10 @@
 Description=Scythe 3D printer failure detection
 After=network-online.target moonraker.service
 Wants=network-online.target
+# Updates and the dashboard's restart button replace the process via execv;
+# give that room without systemd deciding the unit is flapping.
+StartLimitBurst=5
+StartLimitIntervalSec=300
 
 [Service]
 Type=simple
@@ -23,10 +27,6 @@ ExecStart=@DIR@/.venv/bin/python -m src run
 
 Restart=always
 RestartSec=10
-# Updates and the dashboard's restart button replace the process via execv;
-# give that room without systemd deciding the unit is flapping.
-StartLimitBurst=5
-StartLimitIntervalSec=300
 
 # Inference is CPU-hungry; stay out of the way of Klipper's timing.
 Nice=10
