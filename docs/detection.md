@@ -14,7 +14,7 @@ Scythe grabs a camera frame every 30 seconds while a print runs and checks it fo
 
 ## Local model
 
-A YOLOv8 model trained on spaghetti, run with ONNX Runtime on the Scythe machine. It's free and nothing leaves your network. A Raspberry Pi 4 takes a few seconds per frame.
+A YOLOv8 model trained on spaghetti, run with ONNX Runtime on the Scythe machine. It's free and nothing leaves your network. A Raspberry Pi 4 takes about 7 seconds per frame, which fits easily in the 30-second capture interval.
 
 **Minimum confidence** (default 0.6) is the score a box needs to count. Raise it if you get false alarms, lower it if Scythe misses failures. With `log_level` set to `DEBUG` the log shows every box the model saw, including ones below the threshold.
 
