@@ -1,7 +1,7 @@
 """Command line interface.
 
-``scythe run`` replaces ``python main.py``; ``scythe configure`` replaces
-``python settings_ui.py``. Both legacy entry points still work as thin shims.
+``scythe run`` starts monitoring. Setup happens in the web dashboard, which
+``run`` serves even before anything is configured.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     sub = parser.add_subparsers(dest="command")
     sub.add_parser("run", help="Start monitoring (default).")
-    sub.add_parser("configure", help="Interactively create or update the config.")
+    sub.add_parser("download-model", help="Download the local detection model.")
 
     check = sub.add_parser("check", help="Validate config and printer connectivity.")
     check.add_argument(
@@ -72,15 +72,13 @@ def _load(args: argparse.Namespace):
 # --------------------------------------------------------------------------- #
 
 
-def cmd_configure(args: argparse.Namespace) -> int:
-    from src.wizard import run_wizard
+def cmd_download_model(args: argparse.Namespace) -> int:
+    from src.detection.model_download import ensure_model
 
-    configure_logging("WARNING", console=False)
-    try:
-        run_wizard(args.config)
-    except (KeyboardInterrupt, EOFError):
-        print("\nCancelled; nothing was written.")
-        return EXIT_OK
+    settings = load_settings(args.config, validate=False)
+    configure_logging(args.log_level or "INFO")
+    path = ensure_model(settings.detection.model_path)
+    print(f"Model ready at {path}")
     return EXIT_OK
 
 
@@ -113,13 +111,11 @@ def cmd_check(args: argparse.Namespace) -> int:
     ok = True
     print(f"Config              : OK ({args.config or paths.config_path()})")
 
-    model = settings.detection.active_model_path
+    model = settings.detection.model_path
     if model.exists():
         print(f"Model               : OK ({model.name})")
-    elif settings.detection.use_onnx:
-        print(f"Model               : will be exported to {model.name} on first run")
     else:
-        print(f"Model               : MISSING ({model})")
+        print(f"Model               : MISSING — run `scythe download-model` ({model})")
         ok = False
 
     with MoonrakerClient(settings.printer) as printer:
@@ -183,7 +179,7 @@ def restart() -> None:
 
 COMMANDS = {
     "run": cmd_run,
-    "configure": cmd_configure,
+    "download-model": cmd_download_model,
     "check": cmd_check,
     "env": cmd_env,
     "update": cmd_update,
@@ -199,7 +195,8 @@ def main(argv: list[str] | None = None) -> int:
     except ConfigError as exc:
         configure_logging("ERROR", console=False)
         print(f"Configuration error: {exc}", file=sys.stderr)
-        print("\nRun `scythe configure` to set things up.", file=sys.stderr)
+        print("\nFix it in settings.json, or delete the file and redo the web setup.",
+              file=sys.stderr)
         return EXIT_CONFIG_ERROR
     except KeyboardInterrupt:
         print("\nInterrupted.", file=sys.stderr)

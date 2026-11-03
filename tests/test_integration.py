@@ -91,12 +91,11 @@ def printer(moonraker):
 
 
 def build_settings(tmp_path, printer_url) -> Settings:
-    weights = tmp_path / "model.pt"
+    weights = tmp_path / "model.onnx"
     weights.write_bytes(b"x")
     settings = Settings()
     settings.printer.url = printer_url
     settings.detection.model_path = weights
-    settings.detection.use_onnx = False
     settings.detection.save_annotated_frames = False
     settings.target_loop_time = 0.01
     return settings

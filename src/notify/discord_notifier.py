@@ -87,8 +87,11 @@ class DiscordNotifier(BaseNotifier):
         printer: PrinterClient,
         client: discord.Client | None = None,
         log_file: Path = paths.LOG_FILE,
+        dashboard_url: str = "",
     ):
         self._settings = settings
+        #: Alert titles link here (the dashboard's Tailscale URL, when set).
+        self._dashboard_url = dashboard_url or None
         self._printer = printer
         self._client = client or self._build_client()
         self._log_file = log_file
@@ -349,6 +352,7 @@ class DiscordNotifier(BaseNotifier):
 
         embed = discord.Embed(
             title=f"{event.result.label} detected!",
+            url=self._dashboard_url,
             description=f"{description}\n<@{self._settings.ping_user_id}>",
             color=discord.Color.red(),
         )

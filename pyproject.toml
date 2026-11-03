@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scythe-spaghetti-detection"
-version = "0.2.0"
+version = "0.3.0"
 description = "Self-hosted 3D printer spaghetti detection for Moonraker printers."
 readme = "readme.md"
 requires-python = ">=3.10"
@@ -18,26 +18,24 @@ classifiers = [
     "Topic :: Printing",
 ]
 
-# Runtime only. Training and dataset tooling live in the extras below so a
-# monitoring install does not pull `keyboard` (root on Linux) or `roboflow`.
+# Runtime only; keep in step with requirements.txt. Training tooling lives in
+# the `train` extra so a printer install stays small.
 dependencies = [
     "aiohttp>=3.9,<4",
     "discord.py>=2.3,<3",
-    "ultralytics>=8.1,<9",
     "requests>=2.31,<3",
     "urllib3>=1.26,<3",
     "Pillow>=10.0,<12",
+    "numpy>=1.24",
+    "onnxruntime>=1.16,<2; platform_machine != 'armv7l' and platform_machine != 'armv6l'",
 ]
 
 [project.optional-dependencies]
-# ONNX inference and export — the default detection backend.
-onnx = [
-    "onnx>=1.15,<2",
-    "onnxruntime>=1.16,<2",
-    "onnxsim>=0.4,<1",
-]
-# Dataset collection and model training.
+# Dataset collection, training, and ONNX export.
 train = [
+    "ultralytics>=8.1,<9",
+    "onnx>=1.15,<2",
+    "onnxsim>=0.4,<1",
     "roboflow>=1.1,<2",
 ]
 dev = [
@@ -77,4 +75,3 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101"]
-"src/wizard.py" = ["T201"]  # the wizard is a console UI

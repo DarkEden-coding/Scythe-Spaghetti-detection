@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0b0d">
+  <title>Scythe — Log in</title>
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="stylesheet" href="style.css?v=8">
+  <script src="login.js?v=1" defer></script>
+</head>
+<body class="login-page">
+  <form class="card login" id="login-form">
+    <img class="login-mark" src="logo.svg" alt="">
+    <h1>Scythe</h1>
+    <label class="field">
+      <span>Password</span>
+      <input id="login-password" type="password" autocomplete="current-password" required autofocus>
+    </label>
+    <p class="settings-error" id="login-error" role="alert"></p>
+    <button class="button button-primary" type="submit">Log in</button>
+  </form>
+</body>
+</html>

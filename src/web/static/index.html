@@ -6,8 +6,9 @@
   <meta name="theme-color" content="#0a0b0d">
   <title>Scythe — Printer Monitor</title>
   <link rel="icon" type="image/svg+xml" href="logo.svg">
-  <link rel="stylesheet" href="style.css?v=7">
-  <script src="app.js?v=8" defer></script>
+  <link rel="stylesheet" href="style.css?v=8">
+  <script src="app.js?v=9" defer></script>
+  <script src="setup.js?v=1" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -152,6 +153,14 @@
           </label>
         </section>
 
+        <section class="field-group">
+          <h3>Setup</h3>
+          <p class="setup-links">
+            <button class="button button-ghost" type="button" id="rerun-setup">Printer, remote access and password…</button>
+            <button class="button button-ghost" type="button" id="logout-button" hidden>Log out</button>
+          </p>
+        </section>
+
         <p class="env-note" id="env-note" hidden></p>
       </div>
 
@@ -213,6 +222,116 @@
       <span class="settings-error"></span>
       <button class="button button-ghost" type="button" id="guide-back">Back</button>
       <button class="button button-primary" type="button" id="guide-next">Next</button>
+    </footer>
+  </dialog>
+
+  <dialog class="settings setup" id="setup-dialog" aria-labelledby="setup-title">
+    <header class="settings-head">
+      <h2 id="setup-title">Set up Scythe <small id="setup-count"></small></h2>
+      <button class="icon-button" type="button" id="setup-close" aria-label="Close" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+      </button>
+    </header>
+    <ol class="setup-progress" id="setup-progress">
+      <li>Printer</li><li>Detection</li><li>Alerts</li><li>Remote access</li><li>Password</li><li>Done</li>
+    </ol>
+    <div class="settings-body">
+      <section class="setup-step" data-step="printer">
+        <h3>Find your printer</h3>
+        <p id="printer-search-text">Looking for Moonraker on this machine…</p>
+        <div class="field-row">
+          <label class="field">
+            <span>Printer address</span>
+            <input id="setup-printer-url" type="url" spellcheck="false" placeholder="http://mainsailos.local/">
+            <small>Your Mainsail or Fluidd address works.</small>
+          </label>
+          <div class="field field-narrow field-button">
+            <button class="button button-ghost" type="button" id="setup-printer-search">Search</button>
+          </div>
+        </div>
+        <label class="field">
+          <span>Camera</span>
+          <select id="setup-webcam" disabled></select>
+        </label>
+        <div class="setup-snapshot">
+          <img id="setup-snapshot" alt="Test frame from the chosen camera" hidden>
+          <p id="setup-snapshot-text">Choose a camera to see a test frame.</p>
+        </div>
+      </section>
+
+      <section class="setup-step" data-step="detection" hidden>
+        <h3>How should Scythe look for failures?</h3>
+        <div class="choice-list">
+          <label class="choice"><input type="radio" name="setup-backend" value="yolo">
+            <span><b>Local model</b> Free and private, runs on this machine. Catches spaghetti.</span></label>
+          <label class="choice"><input type="radio" name="setup-backend" value="decision">
+            <span><b>AI decision model</b> Uses OpenRouter; under a cent per print-hour with the default model. Also catches layer shifts, warping and other failures.</span></label>
+        </div>
+        <label class="field" id="setup-api-key-field" hidden>
+          <span>OpenRouter API key</span>
+          <input id="setup-api-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-or-v1-…">
+          <small>Create one at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">openrouter.ai/keys</a>. Crop, model and rates are in Settings later.</small>
+        </label>
+      </section>
+
+      <section class="setup-step" data-step="alerts" hidden>
+        <h3>Discord alerts <small>optional</small></h3>
+        <p>Scythe can ping you on Discord with a photo when a print fails. Skip this to use only the dashboard.</p>
+        <button class="button button-ghost" type="button" id="setup-open-guide">Show me how to make a bot</button>
+        <label class="field">
+          <span>Bot token</span>
+          <input id="setup-discord-token" type="password" autocomplete="off" spellcheck="false">
+          <small id="setup-discord-hint"></small>
+        </label>
+        <div class="field-row">
+          <label class="field"><span>Channel ID</span><input id="setup-discord-channel" inputmode="numeric" autocomplete="off"></label>
+          <label class="field"><span>Your user ID</span><input id="setup-discord-user" inputmode="numeric" autocomplete="off"></label>
+        </div>
+      </section>
+
+      <section class="setup-step" data-step="remote" hidden>
+        <h3>Remote access <small>optional</small></h3>
+        <p class="setup-warning" id="setup-helper-missing" hidden>Scythe isn't allowed to change system settings on this machine, so these buttons are off. Re-run the installer to allow it, or see docs/tailscale.md for the manual steps.</p>
+        <div class="system-card">
+          <div>
+            <b>Tailscale</b>
+            <p id="tailscale-text">Checking…</p>
+            <a id="tailscale-link" target="_blank" rel="noopener" hidden></a>
+          </div>
+          <div class="system-actions" id="tailscale-actions"></div>
+        </div>
+        <div class="system-card" id="mainsail-card">
+          <div>
+            <b>Mainsail sidebar</b>
+            <p id="mainsail-text">Checking…</p>
+          </div>
+          <div class="system-actions" id="mainsail-actions"></div>
+        </div>
+        <p class="settings-error" id="system-error" role="alert"></p>
+      </section>
+
+      <section class="setup-step" data-step="password" hidden>
+        <h3>Dashboard password <small>optional</small></h3>
+        <p>Anyone who can open this page can pause your printer. On a home network or Tailscale that's usually fine. Set a password if others share the network.</p>
+        <div class="field-row">
+          <label class="field"><span>Password</span><input id="setup-password" type="password" autocomplete="new-password"></label>
+          <label class="field"><span>Repeat it</span><input id="setup-password-2" type="password" autocomplete="new-password"></label>
+        </div>
+        <small id="setup-password-state"></small>
+        <button class="link-button" type="button" id="setup-password-remove" hidden>Remove the password</button>
+      </section>
+
+      <section class="setup-step" data-step="done" hidden>
+        <h3>All set</h3>
+        <ul class="setup-summary" id="setup-summary"></ul>
+        <p>Scythe restarts and starts watching your printer.</p>
+      </section>
+    </div>
+    <footer class="settings-foot">
+      <p class="settings-error" id="setup-error" role="alert"></p>
+      <button class="button button-ghost" type="button" id="setup-back">Back</button>
+      <button class="button button-ghost" type="button" id="setup-skip" hidden>Skip</button>
+      <button class="button button-primary" type="button" id="setup-next">Next</button>
     </footer>
   </dialog>
 

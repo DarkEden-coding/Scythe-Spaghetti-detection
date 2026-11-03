@@ -35,13 +35,13 @@ def frame() -> Image.Image:
 
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
-    weights = tmp_path / "model.pt"
+    weights = tmp_path / "model.onnx"
     weights.write_bytes(b"not-a-real-model")
     return Settings(
         discord=DiscordSettings(bot_token="token", ping_user_id=1, log_channel_id=2),
         printer=PrinterSettings(url="http://printer.local/", webcam_name="Bed"),
         detection=DetectionSettings(
-            model_path=weights, use_onnx=False, save_annotated_frames=False
+            model_path=weights, save_annotated_frames=False
         ),
         target_loop_time=0.01,
     )

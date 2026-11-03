@@ -1,19 +1,13 @@
-# Runtime dependencies for monitoring.
+# Runtime dependencies for monitoring. Same as `pip install -e .`.
 #
-# Training and dataset collection deps live in requirements-dev.txt, so a
-# printer install no longer pulls roboflow or `keyboard` (which needs root on
-# Linux). selenium and webdriver-manager were listed here but used nowhere.
-#
-# Equivalent to: pip install -e ".[onnx]"
+# The local model runs on ONNX Runtime, so PyTorch and Ultralytics are only
+# needed for training (`pip install -e .[train]`). ONNX Runtime has no wheels
+# for 32-bit ARM; there Scythe offers only the AI decision-model backend.
 
 aiohttp>=3.9,<4
 discord.py>=2.3,<3
-ultralytics>=8.1,<9
 requests>=2.31,<3
 urllib3>=1.26,<3
 Pillow>=10.0,<12
-
-# ONNX backend (detection.use_onnx, on by default — much faster on a Pi).
-onnx>=1.15,<2
-onnxruntime>=1.16,<2
-onnxsim>=0.4,<1
+numpy>=1.24
+onnxruntime>=1.16,<2; platform_machine != "armv7l" and platform_machine != "armv6l"

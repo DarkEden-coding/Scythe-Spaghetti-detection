@@ -1,8 +1,7 @@
 """ONNX export.
 
-Kept beside the detector rather than in the training tools: the runtime needs
-it when ``use_onnx`` is set and no ``.onnx`` file has been produced yet, and a
-runtime package should not import from a dev-only one.
+A training tool: it needs Ultralytics and PyTorch (``pip install -e .[train]``).
+The monitor only runs the exported file.
 """
 
 from __future__ import annotations
@@ -29,7 +28,7 @@ def export_onnx(weights: Path, image_size: int = 640) -> Path:
     except ImportError as exc:  # pragma: no cover - environment dependent
         raise DetectorError(
             "ultralytics is required to export a model. Install it with "
-            "`pip install -r requirements.txt`."
+            "`pip install -e .[train]`."
         ) from exc
 
     log.info("Exporting %s to ONNX (imgsz=%d)...", weights, image_size)

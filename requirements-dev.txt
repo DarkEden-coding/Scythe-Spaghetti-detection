@@ -1,5 +1,5 @@
 # Development, testing, and model training.
-# Equivalent to: pip install -e ".[dev,train,onnx]"
+# Equivalent to: pip install -e ".[dev,train]"
 
 -r requirements.txt
 
@@ -7,5 +7,8 @@ pytest>=7.4,<9
 pytest-asyncio>=0.23,<2
 ruff>=0.4,<1
 
-# Dataset collection (tools/collect_dataset.py --upload).
+# Training and ONNX export (tools/train.py, tools/export_onnx.py).
+ultralytics>=8.1,<9
+onnx>=1.15,<2
+onnxsim>=0.4,<1
 roboflow>=1.1,<2

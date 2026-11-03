@@ -56,7 +56,11 @@ def build_notifier(
 
     channels: list[Notifier] = []
     if settings.discord.enabled:
-        channels.append(DiscordNotifier(settings.discord, printer))
+        channels.append(
+            DiscordNotifier(
+                settings.discord, printer, dashboard_url=settings.web.public_url
+            )
+        )
     if settings.web.enabled:
         from src.notify.web_notifier import WebNotifier
 
@@ -94,9 +98,18 @@ class Application:
             settings, self._printer, self._debug_detection, settings_control
         )
         self._loop: MonitorLoop | None = None
+        self._stop = asyncio.Event()
 
     async def run_async(self) -> None:
-        """Load the model, connect, and monitor until interrupted."""
+        """Load the model, connect, and monitor until interrupted.
+
+        Before the web setup is finished only the dashboard runs; finishing
+        setup restarts the process into normal monitoring.
+        """
+        if not self._settings.setup_complete:
+            await self._serve_setup()
+            return
+
         # Load before connecting: a bad model path should fail fast rather than
         # after announcing itself in the channel.
         log.info("Loading detection model...")
@@ -119,6 +132,19 @@ class Application:
                 await self._notifier.close()
             await asyncio.to_thread(self._printer.close)
 
+    async def _serve_setup(self) -> None:
+        self._install_signal_handlers()
+        log.info(
+            "Setup isn't finished. Open the dashboard on port %d to set Scythe up.",
+            self._settings.web.port,
+        )
+        try:
+            await self._notifier.start()
+            await self._stop.wait()
+        finally:
+            with contextlib.suppress(Exception):
+                await self._notifier.close()
+
     def run(self) -> int:
         """Synchronous entry point. Returns a process exit code."""
         try:
@@ -130,6 +156,7 @@ class Application:
         return 0
 
     def request_stop(self) -> None:
+        self._stop.set()
         if self._loop is not None:
             self._loop.request_stop()
 

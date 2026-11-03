@@ -1,245 +1,72 @@
-# Scythe Spaghetti Detection
+# Scythe
 
-Hello, thanks for checking out my project! This is a **simple and lightweight** *OPEN SOURCE* and *SELF-HOSTED* 3D printer fail detection project. It is entirely based in Python and currently uses the **YOLOv8 object detection framework**. The project currently has a large model trained. If needed, I will try to train models for other sizes suitable for less powerful devices such as the Raspi-Zero. If you find any issues please make an issue or pull request, any showcase of your usage of this project would be greatly appreciated, you can contact me using the info below.
+Scythe watches your 3D printer's camera and pauses the print when it fails. It runs on your own hardware, next to Klipper, and works with any printer that Moonraker drives.
 
-## This project is in alpha! I apologise for any errors or dificulty you have with this project, but as a student I may not have the time to find all the errors, if you find any please report them in the Issues!
+![The setup wizard finding a printer and showing a test frame](readme_images/setup.png)
 
-## Features:
-- [x] **Supports any moonraker supported 3d printer**
-- [x] **3D Printer Fail Detection**
-- [x] **Discord Notifications and Status Updates**
-- [x] **Lightweight and Easy to Use**
-- [x] *Open Source*
-- [x] *Self Hosted*
-- [x] **Linux and Windows Support**
-- [x] **YOLOv8 Object Detection** (spaghetti)
-- [x] **Decision-model detection** via OpenRouter or self-hosted Ollama (spaghetti, stringing, under-extrusion, warping, layer shifts, layer cracking, parts knocked loose)
-- [x] *Large Model Trained*
-- [x] Any Linux or Windows-based system support (theoretically, not yet tested, should only require Python support)
-- [ ] XL Model Trained
-- [ ] Medium Model Trained
-- [ ] Small Model Trained
-- [ ] Nano Model Trained
-- [x] **Local Web Interface**
-- [ ] Email Notifications
+- **Two ways to detect failures.** The bundled local model is free and private, and catches spaghetti. An AI decision model (OpenRouter, or self-hosted with Ollama) also catches layer shifts, warping, stringing, under-extrusion, cracking and parts knocked loose, for under a cent per print-hour.
+- **Web dashboard** with the live frame, detection boxes, and pause, resume and dismiss buttons.
+- **Discord alerts** with a photo, plus slash commands to pause or check the printer.
+- **Remote access through Tailscale**, set up from the dashboard, with no ports opened.
+- **Mainsail sidebar link**, so Scythe opens inside your printer's address.
 
-## Slash Commands
-Only the configured `discord.ping_user_id` can use these commands:
+This is a student project in alpha. If something breaks, please [open an issue](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/issues).
 
-- `/pause` pauses an active print.
-- `/resume` resumes a paused print; other printer states are rejected.
-- `/get_printer_status` reports the current Moonraker print state.
-- `/get_image` returns the current camera frame.
-- `/get_log_file` returns the current Scythe log for troubleshooting.
+## Install
 
-## Installation:
-Install on the machine that can reach your printer.
+On your Klipper Pi, or any Linux machine that can reach the printer, run this as your normal user (not root):
 
-1. Clone the repository
 ```bash
-git clone "https://github.com/DarkEden-coding/Scythe-Spaghetti-detection.git"
-```
-2. Move into the installation folder
-```bash
-cd Scythe-Spaghetti-detection
-```
-3. Install the required packages
-```bash
-pip install -r requirements.txt
+curl -fsSL https://raw.githubusercontent.com/DarkEden-coding/Scythe-Spaghetti-detection/master/install.sh | bash
 ```
 
-Installing as a package also gives you the `scythe` command:
+It takes a few minutes on a Pi. The installer:
+
+- installs the newest release into `~/scythe` with its own Python, so it won't touch Klipper's;
+- downloads the detection model (175 MB);
+- starts Scythe as a `scythe` systemd service on the first free port from 8090;
+- on a Klipper host, adds Scythe to Moonraker's update manager.
+
+At the end it prints an address like `http://192.168.1.50:8090/`.
+
+You need a 64-bit OS for the local model. On 32-bit Raspberry Pi OS, Scythe installs with the AI decision model only.
+
+## Set up
+
+Open the address the installer printed. A setup wizard walks you through:
+
+1. **Printer.** Scythe finds Moonraker on the same machine by itself. Pick your camera and check the test picture.
+2. **Detection.** Local model or AI decision model. The AI option needs an [OpenRouter key](https://openrouter.ai/keys).
+3. **Discord alerts** (optional), with a step-by-step guide to making the bot.
+4. **Remote access** (optional). One click installs Tailscale, another gives Scythe an HTTPS address like `https://printer.your-tailnet.ts.net/`. Another adds Scythe to Mainsail's sidebar.
+5. **Password** (optional).
+
+Then Scythe restarts and starts watching. Everything stays changeable later from **Settings** (the gear icon).
+
+## Update
+
+On a Klipper host, Scythe shows up in the **Update** panel of Mainsail or Fluidd next to Klipper and Moonraker. Elsewhere it updates itself to each new release when it starts. Running the install command again also updates it.
+
+## Uninstall
+
 ```bash
-pip install -e .
+~/scythe/install.sh --uninstall          # keeps your settings
+~/scythe/install.sh --uninstall --purge  # deletes everything
 ```
 
-## Configuration:
-1. Run the configuration wizard:
-```bash
-python3 -m src configure
-```
-Follow the on screen instructions. Press Enter at any prompt to keep the value in brackets.
+This removes the service, the Mainsail link and the Moonraker entry. Tailscale stays installed.
 
-2. To get the bot token, follow this guide: https://discordpy.readthedocs.io/en/stable/discord.html. The dashboard also has a step-by-step guide: open **Settings → Discord → How do I set this up?**. Discord is optional; leave the token empty to use only the dashboard.
-3. To get the discord channel id and user id enable developer mode (settings -> advanced -> dev mode) in discord and right click the channel/user and click "copy id"
+## More
 
-Settings are written to `settings.json`. **That file contains your bot token — it is gitignored, keep it that way.**
+- [Detection](docs/detection.md): how the two backends work, and tuning crop, threshold and rates.
+- [Discord](docs/discord.md): making the bot, and the slash commands.
+- [Remote access](docs/remote-access.md): Tailscale and the Mainsail link, including manual steps.
+- [Configuration](docs/configuration.md): every setting and its environment variable.
+- [Troubleshooting](docs/troubleshooting.md)
+- [Development](docs/development.md): running from source, tests, training, releases.
 
-Check everything before you rely on it:
-```bash
-python3 -m src check
-```
-This validates the config, reads the print state, resolves the webcam, and pulls a test frame.
+## Contact
 
-### Settings reference
+Pull requests are welcome. You can reach me on Discord as `scytheeden`, or at `darkedenc9@gmail.com`. If you have GPU time to spare for training bigger models, I'd love to hear from you.
 
-| Setting | Default | What it does |
-| --- | --- | --- |
-| `discord.bot_token` | — | Your bot token. Leave empty to run with only the web dashboard. |
-| `discord.log_channel_id` | — | Channel the bot posts to. |
-| `discord.ping_user_id` | — | Who gets pinged on a failure. |
-| `discord.status_update_mode` | `edit` | `edit` keeps one status message current, `message` posts a new one each loop, `silent` posts none. |
-| `discord.acknowledge_timeout` | `0` | Seconds to wait for a 👍 after a failure before resuming. `0` waits forever. |
-| `web.enabled` | `true` | Serve the local operator dashboard with monitoring. |
-| `web.host` | `0.0.0.0` | Listen on every interface so other devices on the LAN can connect. |
-| `web.port` | `8080` | Dashboard HTTP port. |
-| `printer.url` | `http://mainsailos.local/` | Moonraker address. |
-| `printer.webcam_name` | `Bed` | Exactly as it appears in Mainsail/Fluidd. Case sensitive. |
-| `printer.request_timeout` | `10` | Seconds before a request to the printer gives up. |
-| `printer.max_retries` | `3` | Retries for reads (never for pause). |
-| `detection.use_cuda` | `false` | Use an NVIDIA GPU. |
-| `detection.use_onnx` | `true` | Use the ONNX runtime — much faster on a Pi. |
-| `detection.min_confidence` | `0.6` | Raise for fewer false positives, lower for fewer misses. |
-| `detection.save_annotated_frames` | `true` | Keep failure frames in `data/detections/`. |
-| `detection.backend` | `yolo` | `yolo` runs the bundled model locally; `decision` asks a decision model (see below). |
-| `detection.interval` | `0` | Seconds between detections. `0` checks every captured frame. |
-| `detection.decision.provider` | `openrouter` | `openrouter`, or `ollama` for a self-hosted model. |
-| `detection.decision.base_url` | — | Endpoint override. Empty uses the provider's default. |
-| `detection.decision.api_key` | — | OpenRouter key. Or set `SCYTHE_DETECTION_DECISION_API_KEY`. |
-| `detection.decision.model` | `~liquid/d1-ultra-latest` | Decision model id. |
-| `detection.decision.threshold` | `0.6` | Flag a failure when any answer's probability reaches this. |
-| `detection.decision.crop` | — | Crop around the part as `left,top,right,bottom` fractions. Easier to set by dragging in the dashboard. |
-| `detection.decision.image_max_side` | `1240` | Longest side of the image sent, in pixels. 1240 matches the evaluation. |
-| `detection.decision.request_timeout` | `30` | Seconds before a request gives up. |
-| `target_loop_time` | `30` | Seconds between camera frames. |
-| `pause_on_spaghetti` | `true` | Pause the print when a failure is detected. |
-| `enable_auto_update` | `false` | Pull updates from git on start. |
-| `log_level` | `INFO` | `DEBUG` when reporting a bug. |
-
-Every setting can also be supplied as an environment variable, which is handy for systemd or Docker and keeps your token out of any file:
-```bash
-python3 -m src env       # lists them all
-export SCYTHE_DISCORD_BOT_TOKEN=...
-```
-Precedence is defaults → `settings.json` → environment.
-
-### Decision models
-The bundled YOLO model only knows spaghetti. Instead, Scythe can ask a [decision model](https://openrouter.ai/docs/guides/community/jev) about each frame, which catches more kinds of failure:
-
-| Failure | YOLO | Decision model |
-| --- | :-: | :-: |
-| Spaghetti | ✓ | ✓ |
-| Stringing | | ✓ |
-| Under-extrusion | | ✓ |
-| Warping | | ✓ |
-| Layer shift | | ✓ (tested on real prints) |
-| Layer cracking | | ✓ |
-| Part knocked loose | | ✓ |
-
-Each frame gets two yes/no questions, worded exactly as in the evaluation: whether the print shows any of the failures above (ignoring nozzle blobs, purge lines, brims and supports), and whether it has a layer shift. Each answer is a probability, and a failure is reported when either one reaches the alert threshold. Discord and dashboard alerts say which one fired (*Layer shift detected!* or *Print failure detected!*) and show both scores.
-
-Set it up from the dashboard: open **Settings** (the gear in the top bar), choose **Decision model**, paste an [OpenRouter API key](https://openrouter.ai/settings/keys), and drag a box around the part on the camera frame. Changes apply immediately and are saved to `settings.json`; the key is never sent back to the browser.
-
-- **Model.** The default, Liquid d1-ultra, did best in testing on a real printer: it caught almost every layer-shifted frame in good light and was the most reliable cloud model in the dark. Jev 1.14 is as good in the light at about twice the price.
-- **Crop.** Cropping to the part mattered more than the model. Without it, small failures are lost in the frame.
-- **Rates.** *Capture every* sets how often the camera frame refreshes; *run detection every* sets how often a frame is sent to the model. The panel shows the expected cost per print-hour, which is about $0.003 at one detection a minute with d1-ultra. Nothing is sent while the printer is idle.
-- **Threshold.** Probabilities aren't calibrated the same way across models, so check the threshold against your own prints. `log_level: DEBUG` logs every score.
-- **Light the bed.** No model was reliable on dark frames.
-- **Self-hosting.** Choose the *Self-hosted (Ollama)* provider to use a decision model served by [Ollama](https://ollama.com) (default endpoint `http://localhost:11434/v1/systemone`, no key needed). `d3:4b` gave good results in testing on a desktop GPU.
-
-### Upgrading from an older version
-If you already have a `settings.py`, your values are imported automatically the first time you run `scythe configure` (the file is parsed, never executed). **Delete `settings.py` afterwards — it still contains your bot token.**
-
-## Usage:
-```bash
-python3 -m src run     # or: scythe run, or: python3 main.py
-```
-
-### Web dashboard
-
-The dashboard starts with the monitor at `http://<scythe-host>:8080`. It shows
-the latest camera frame at the configured detection cadence, draws current
-detection boxes, reports the latest alert, and provides state-aware pause,
-resume, and acknowledgment controls. The **Idle detection** toggle temporarily
-runs inference while the printer is not active for debugging; it resets to off
-on restart and never pauses the printer, notifies Discord, or waits for an
-acknowledgment.
-
-The dashboard intentionally has no login and binds to the local network by
-default. Do not port-forward it or expose it to the public internet. Set
-`web.host` to `127.0.0.1` if it will only be used through a local reverse proxy.
-
-The monitor command starts both Discord and the dashboard.
-
-To start on boot, use a systemd service. A ready-made unit is in [`deploy/scythe.service`](deploy/scythe.service):
-```bash
-sudo cp deploy/scythe.service /etc/systemd/system/
-sudo nano /etc/systemd/system/scythe.service   # set User= and WorkingDirectory=
-sudo systemctl daemon-reload
-sudo systemctl enable --now scythe
-```
-Then check on it with:
-```bash
-systemctl status scythe
-journalctl -u scythe -f
-```
-Logs are also written to `data/scythe.log`.
-
-## Opening Scythe from Mainsail:
-Mainsail has no plugin system, but it can add links to its sidebar. Both steps below live outside Mainsail's own files, so Mainsail updates leave them alone.
-
-1. Serve the dashboard under `/scythe/` on Mainsail's address. In `/etc/nginx/sites-available/mainsail`, add this inside the `server { ... }` block, then run `sudo systemctl reload nginx`:
-   ```nginx
-   location /scythe/ {
-       proxy_pass http://127.0.0.1:8090/;
-       proxy_buffering off;
-   }
-   ```
-   Change `8090` if you set a different dashboard port.
-2. Create `~/printer_data/config/.theme/navi.json`:
-   ```json
-   [{"title": "Scythe", "href": "/scythe/", "target": "_self", "position": 85}]
-   ```
-   Reload Mainsail and Scythe appears in the sidebar. Clicking the Scythe logo goes back to Mainsail.
-
-## Discord Message UI:
-### status:
-![Alt text](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/blob/master/readme_images/status.png?raw=true "Status Message")
-
-### fail:
-![Alt text](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/blob/master/readme_images/fail.png?raw=true "Fail Message")
-## Defenetly 3d printer spaghetti, trust :)
-![Alt text](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/blob/master/readme_images/Screenshot%202024-02-03%20at%201.58.17%20PM.png?raw=true "The Spaghett")
-
-## Trouble Shooting:
-Run `python3 -m src check` first — it will usually tell you which part is unhappy.
-
-**"Webcam 'Bed' not found"** — the name is case sensitive and must match Mainsail/Fluidd exactly. The error lists the names your printer reported.
-
-**"No configuration found"** — run `python3 -m src configure`.
-
-**Permission errors** — don't run the bot with `sudo`. Fix ownership of the install directory instead:
-```bash
-sudo chown -R "$USER" /path/to/Scythe-Spaghetti-detection
-```
-Running as root was the previous advice here; it makes the auto-updater able to rewrite files it shouldn't and is not needed for anything the bot does.
-
-**Too many Discord messages** — set `discord.status_update_mode` to `edit` (the default) or `silent`.
-
-## Development:
-```bash
-pip install -r requirements-dev.txt
-pytest                                 # the suite needs no printer, model, or token
-ruff check src tools tests
-```
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for how the pieces fit together and where to add a new notification channel or printer backend.
-
-Model tooling lives in `tools/`:
-```bash
-python3 -m tools.export_onnx models/largeModel.pt
-python3 -m tools.train --data path/to/data.yaml --name my-run
-python3 -m tools.collect_dataset --interval 5 --output data/training
-```
-
-## Contributing:
-If you would like to contribute to the project, feel free to make a pull request. I will review it and merge it if it is suitable. If you have any questions, feel free to reach out to me on discord: `scytheeden` or email me at `darkedenc9@gmail.com`. If anyone is willing to "donate" gpu time to train new models that would be greatly appreciated.
-
-# Relevant Links:
-- [My Discord](https://discord.gg/users/806281289040396288)
-- [YOLOv8](https://docs.ultralytics.com/)
-- [Roboflow Dataset](https://universe.roboflow.com/dark-eden-nuheg/3d-printing-fail-detection)
-
-# Notes:
-- If you are a large company looking into using this software please contact me through email about possable modification to better suit your location and system.
-- I am not responsable for any damage to your printer while using this project, use at your own risk, the detection will be as good as I can get it but if you have a spaghetti that is not detected and damages your printer I am not responsable.
+Scythe can miss failures. Use it at your own risk; I'm not responsible for damage to your printer.

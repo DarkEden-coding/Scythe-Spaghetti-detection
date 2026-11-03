@@ -118,6 +118,10 @@ class SettingsControl:
     def settings(self) -> Settings:
         return self._settings
 
+    @property
+    def config_path(self) -> Path | None:
+        return self._config_path
+
     def estimate(self, settings: Settings | None = None) -> pricing.CostEstimate | None:
         """Cost per print-hour for the decision backend, or ``None`` for YOLO."""
         settings = settings or self._settings
