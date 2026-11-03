@@ -152,7 +152,7 @@ function renderDetection(payload) {
   } else if (!["printing", "paused"].includes(payload.printer.state)
     && !payload.debug_detection_enabled) {
     setVerdict("", "Not detecting", "No print running",
-      "Scanning starts with the next print. Turn on idle detection to scan now.");
+      "Scanning starts with the next print. Turn on “Detect while idle” to scan now.");
   } else if (payload.frame) {
     setVerdict("clear", "All clear", "Looks good", "No failure in the latest scan.");
   } else {
