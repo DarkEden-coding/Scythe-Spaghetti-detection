@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 from src.logging_setup import configure_logging
-from src.paths import DEFAULT_MODEL
+from src.paths import TRAINING_WEIGHTS as DEFAULT_MODEL
 
 log = logging.getLogger(__name__)
 

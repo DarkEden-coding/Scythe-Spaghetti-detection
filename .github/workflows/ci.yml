@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # The 84 MB checkpoint is not needed to lint or run the test suite.
+          # The checkpoint is not needed to lint or run the test suite.
           lfs: false
 
       - uses: actions/setup-python@v5
@@ -28,12 +28,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install test dependencies
-        # Deliberately not the full runtime set: ultralytics pulls Torch, and
-        # the suite is built so that nothing under test needs it.
+      - name: Install dependencies
+        # The runtime no longer needs Torch, so the suite runs against the
+        # real dependency set.
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-asyncio ruff requests Pillow urllib3 aiohttp
+          pip install -r requirements.txt pytest pytest-asyncio ruff
+
+      - name: Check shell scripts
+        run: shellcheck -S warning install.sh deploy/scythe-helper
 
       - name: Lint
         run: ruff check src tools tests

@@ -28,7 +28,7 @@ from src.errors import ConfigError
 
 ENV_PREFIX = "SCYTHE"
 
-#: Values the wizard writes as placeholders; treated as "not configured yet".
+#: Placeholder values treated as "not configured yet".
 PLACEHOLDERS = frozenset({"", "YOUR DISCORD BOT TOKEN", "CHANGEME", "changeme", "TODO"})
 
 STATUS_UPDATE_MODES = frozenset({"edit", "message", "silent"})
@@ -80,7 +80,7 @@ class DiscordSettings:
     def validate(self) -> None:
         if self.bot_token in PLACEHOLDERS:
             raise ConfigError(
-                "discord.bot_token is not set. Run `scythe configure` or set "
+                "discord.bot_token is not set. Add it in the dashboard settings or set "
                 f"{ENV_PREFIX}_DISCORD_BOT_TOKEN."
             )
         if self.log_channel_id <= 0:
@@ -100,7 +100,9 @@ class DiscordSettings:
 class PrinterSettings:
     """How to reach Moonraker."""
 
-    url: str = "http://mainsailos.local/"
+    #: Moonraker, or the Mainsail/Fluidd address that proxies it. The web
+    #: setup finds this automatically on the printer's own host.
+    url: str = "http://localhost/"
     webcam_name: str = "Bed"
     request_timeout: float = 10.0
     max_retries: int = 3
@@ -129,7 +131,15 @@ class WebSettings:
 
     enabled: bool = True
     host: str = "0.0.0.0"
-    port: int = 8080
+    #: 8080 is often taken by the camera streamer on Klipper hosts.
+    port: int = 8090
+    #: PBKDF2 hash of the dashboard password; empty means no login.
+    password_hash: str = ""
+    #: Signs login cookies. Generated when a password is first set.
+    session_secret: str = ""
+    #: Address that reaches the dashboard from elsewhere (e.g. a Tailscale
+    #: URL). Discord alerts link to it when set.
+    public_url: str = ""
 
     def validate(self) -> None:
         """Validate the dashboard listener address."""
@@ -137,6 +147,8 @@ class WebSettings:
             raise ConfigError("web.host is required.")
         if not 1 <= self.port <= 65535:
             raise ConfigError("web.port must be between 1 and 65535.")
+        if self.public_url and not self.public_url.startswith(("http://", "https://")):
+            raise ConfigError("web.public_url must start with http:// or https://.")
 
 
 DETECTION_BACKENDS = frozenset({"yolo", "decision"})
@@ -237,8 +249,11 @@ class DetectionSettings:
     #: Seconds between detections. Frames are still captured every
     #: ``target_loop_time``; ``0`` runs detection on every captured frame.
     interval: float = 0.0
+    #: ONNX model run by the ``yolo`` backend.
     model_path: Path = paths.DEFAULT_MODEL
+    #: Use ONNX Runtime's CUDA provider when it is installed.
     use_cuda: bool = False
+    #: Ignored. Kept so pre-0.3 config files still load; ONNX is always used.
     use_onnx: bool = True
     min_confidence: float = 0.6
     #: Class index that represents spaghetti in the shipped model.
@@ -264,22 +279,12 @@ class DetectionSettings:
             )
         if self.image_size <= 0:
             raise ConfigError("detection.image_size must be positive.")
-        if not self.model_path.exists():
-            raise ConfigError(f"detection.model_path does not exist: {self.model_path}")
 
-    @property
-    def device(self) -> int | str:
-        """Ultralytics device selector."""
-        return 0 if self.use_cuda else "cpu"
-
-    @property
-    def onnx_path(self) -> Path:
-        """Sibling ONNX file that Ultralytics produces for ``model_path``."""
-        return self.model_path.with_suffix(".onnx")
-
-    @property
-    def active_model_path(self) -> Path:
-        return self.onnx_path if self.use_onnx else self.model_path
+    def __post_init__(self) -> None:
+        # Pre-0.3 configs point at the PyTorch checkpoint; the runtime only
+        # reads its exported sibling.
+        if self.model_path.suffix == ".pt":
+            self.model_path = self.model_path.with_suffix(".onnx")
 
 
 @dataclass
@@ -293,6 +298,8 @@ class Settings:
 
     #: Target seconds between monitor iterations.
     target_loop_time: float = 30.0
+    #: False until the web setup is finished. Monitoring waits for it.
+    setup_complete: bool = False
     pause_on_spaghetti: bool = True
     enable_auto_update: bool = False
     log_level: str = "INFO"
@@ -553,8 +560,8 @@ def load_settings(
 ) -> Settings:
     """Load settings from disk plus environment overrides.
 
-    Raises :class:`ConfigError` if no configuration exists at all, or if the
-    resulting settings are invalid.
+    With no config at all the defaults are returned, and the dashboard's
+    setup takes over. Raises :class:`ConfigError` for invalid settings.
     """
     config_file = path or paths.config_path()
     env = os.environ if env is None else env
@@ -569,11 +576,9 @@ def load_settings(
         raw = read_legacy_settings(paths.LEGACY_CONFIG_PATH)
 
     overrides = _env_overrides(Settings, env, f"{ENV_PREFIX}_")
-    if not raw and not overrides:
-        raise ConfigError(
-            f"No configuration found at {config_file}. Run `scythe configure` "
-            f"to create one."
-        )
+    # Configs written before the web setup existed were set up by hand.
+    if raw and "setup_complete" not in raw and "printer" in raw:
+        raw["setup_complete"] = True
 
     settings = _build(Settings, _deep_merge(raw, overrides))
     return settings.validate() if validate else settings

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import numpy as np
 import pytest
 from PIL import Image
 
@@ -10,41 +11,35 @@ from src.detection.results import DetectionBox, DetectionResult
 
 
 class FakeBox:
-    """Mimics an Ultralytics box, whose values are all zero-dim tensors."""
-
-    class _Scalar:
-        def __init__(self, value):
-            self._value = value
-
-        def item(self):
-            return self._value
+    """One box the fake model reports, in the model's 640 px input space."""
 
     def __init__(self, xyxy, conf, cls):
-        self.xyxy = [[self._Scalar(v) for v in xyxy]]
-        self.conf = [self._Scalar(conf)]
-        self.cls = [self._Scalar(cls)]
-
-
-class FakeYoloResult:
-    def __init__(self, boxes):
-        self.boxes = boxes
+        self.xyxy, self.conf, self.cls = xyxy, conf, cls
 
 
 class FakeModel:
-    def __init__(self, boxes):
+    """Returns raw YOLOv8 output, shaped ``(1, 4 + classes, anchors)``."""
+
+    def __init__(self, boxes, classes=2):
         self._boxes = boxes
+        self._classes = classes
         self.calls = []
 
-    def __call__(self, **kwargs):
-        self.calls.append(kwargs)
-        return [FakeYoloResult(self._boxes)]
+    def __call__(self, array):
+        self.calls.append(array)
+        output = np.zeros((1, 4 + self._classes, max(1, len(self._boxes))), np.float32)
+        for i, box in enumerate(self._boxes):
+            x1, y1, x2, y2 = box.xyxy
+            output[0, :4, i] = ((x1 + x2) / 2, (y1 + y2) / 2, x2 - x1, y2 - y1)
+            output[0, 4 + box.cls, i] = box.conf
+        return output
 
 
 @pytest.fixture
 def settings(tmp_path):
-    weights = tmp_path / "model.pt"
+    weights = tmp_path / "model.onnx"
     weights.write_bytes(b"x")
-    return DetectionSettings(model_path=weights, use_onnx=False, min_confidence=0.6)
+    return DetectionSettings(model_path=weights, min_confidence=0.6)
 
 
 @pytest.fixture
@@ -111,16 +106,20 @@ class TestDetector:
         SpaghettiDetector(settings, model=model).detect(frame)
         assert list(workdir.iterdir()) == []
 
-    def test_device_selection(self, settings, frame):
-        settings.use_cuda = True
+    def test_model_gets_a_normalised_three_channel_square(self, settings, frame):
         model = FakeModel([])
         SpaghettiDetector(settings, model=model).detect(frame)
-        assert model.calls[0]["device"] == 0
+        array = model.calls[0]
+        assert array.shape == (1, 3, 640, 640)
+        assert array.min() >= 0.0 and array.max() <= 1.0
 
-        settings.use_cuda = False
-        model = FakeModel([])
-        SpaghettiDetector(settings, model=model).detect(frame)
-        assert model.calls[0]["device"] == "cpu"
+    def test_overlapping_boxes_are_merged(self, settings, frame):
+        model = FakeModel(
+            [FakeBox((10, 10, 50, 50), 0.9, 1), FakeBox((12, 12, 50, 50), 0.8, 1)]
+        )
+        result = SpaghettiDetector(settings, model=model).detect(frame)
+        assert result.count == 1
+        assert result.max_confidence == pytest.approx(0.9)
 
 
 class TestAnnotate:

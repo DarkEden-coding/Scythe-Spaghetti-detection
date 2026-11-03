@@ -16,14 +16,18 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 #: Bundled model weights.
 MODELS_DIR = PROJECT_ROOT / "models"
 
-#: Default weights shipped with the project.
-DEFAULT_MODEL = MODELS_DIR / "largeModel.pt"
+#: Exported model the monitor runs; downloaded by the installer.
+DEFAULT_MODEL = MODELS_DIR / "largeModel.onnx"
+
+#: PyTorch checkpoint the ONNX model is exported from (training only).
+TRAINING_WEIGHTS = MODELS_DIR / "largeModel.pt"
 
 #: Writable location for runtime artifacts (annotated frames, logs).
 DATA_DIR = PROJECT_ROOT / "data"
 
 #: Primary config file.
 CONFIG_PATH = PROJECT_ROOT / "settings.json"
+
 
 #: Pre-0.2 config format, read once for migration then left alone.
 LEGACY_CONFIG_PATH = PROJECT_ROOT / "settings.py"

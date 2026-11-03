@@ -118,6 +118,10 @@ class SettingsControl:
     def settings(self) -> Settings:
         return self._settings
 
+    @property
+    def config_path(self) -> Path | None:
+        return self._config_path
+
     def estimate(self, settings: Settings | None = None) -> pricing.CostEstimate | None:
         """Cost per print-hour for the decision backend, or ``None`` for YOLO."""
         settings = settings or self._settings
@@ -140,6 +144,10 @@ class SettingsControl:
         values = {
             name: _get(self._settings, path) for name, (path, _kind) in FIELDS.items()
         }
+        # Discord ids exceed JavaScript's exact integer range; as numbers the
+        # browser rounds them and saves a different id back.
+        for name in ("discord_channel_id", "discord_user_id"):
+            values[name] = str(values[name]) if values[name] else ""
         key = values.pop("api_key")
         token = values.pop("discord_token")
         env_names = env_var_names()

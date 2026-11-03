@@ -586,8 +586,10 @@ let guideStep = 0;
 
 // A bot token's first segment is the bot's user id, which is also the
 // application id the invite link needs.
+let guideToken = "";
+
 function inviteUrl() {
-  const token = settingsForm.elements.discord_token.value.trim();
+  const token = guideToken || settingsForm.elements.discord_token.value.trim();
   try {
     const id = atob(token.split(".")[0].replace(/-/g, "+").replace(/_/g, "/"));
     if (!/^\d{15,22}$/.test(id)) return null;
@@ -611,20 +613,23 @@ function showGuideStep(index) {
   }
 }
 
-function openGuide() {
+function openGuide(token = "") {
+  guideToken = typeof token === "string" ? token : "";
   showGuideStep(0);
   settingsUi["discord-guide"].showModal();
 }
 
 document.querySelectorAll("[data-open-guide]").forEach((button) => {
-  button.addEventListener("click", openGuide);
+  button.addEventListener("click", () => openGuide());
 });
+window.scytheOpenGuide = openGuide;
 settingsUi["guide-close"].addEventListener("click", () => settingsUi["discord-guide"].close());
 settingsUi["guide-back"].addEventListener("click", () => showGuideStep(guideStep - 1));
 settingsUi["guide-next"].addEventListener("click", () => {
   if (guideStep === guideSteps.length - 1) {
     settingsUi["discord-guide"].close();
-    if (!settingsUi["settings-dialog"].open) openSettings();
+    const inSetup = document.getElementById("setup-dialog").open;
+    if (!inSetup && !settingsUi["settings-dialog"].open) openSettings();
   } else {
     showGuideStep(guideStep + 1);
   }

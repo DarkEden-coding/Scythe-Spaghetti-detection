@@ -61,10 +61,14 @@ class TestLoading:
         assert settings.discord.bot_token == "abc"
         assert settings.printer.webcam_name == "Bed"  # default preserved
 
-    def test_missing_file_is_an_error(self, tmp_path, monkeypatch):
+    def test_missing_file_starts_setup(self, tmp_path, monkeypatch):
         monkeypatch.setattr("src.paths.LEGACY_CONFIG_PATH", tmp_path / "nothing.py")
-        with pytest.raises(ConfigError, match="No configuration found"):
-            load_settings(tmp_path / "absent.json", env={})
+        settings = load_settings(tmp_path / "absent.json", env={})
+        assert settings.setup_complete is False
+
+    def test_hand_written_config_counts_as_set_up(self, tmp_path, model):
+        payload = self._minimal(model) | {"printer": {"url": "http://p.local/"}}
+        assert load_settings(self._write(tmp_path, payload), env={}).setup_complete
 
     def test_unknown_key_is_rejected(self, tmp_path, model):
         payload = self._minimal(model) | {"targetlooptime": 5}
@@ -152,11 +156,11 @@ class TestValidation:
         with pytest.raises(ConfigError, match="status_update_mode"):
             settings.discord.validate()
 
-    def test_onnx_path_is_a_sibling(self, tmp_path):
-        settings = Settings()
-        settings.detection.model_path = tmp_path / "large.pt"
-        assert settings.detection.onnx_path == tmp_path / "large.onnx"
-        assert settings.detection.active_model_path == settings.detection.onnx_path
+    def test_old_checkpoint_path_uses_the_onnx_sibling(self, tmp_path):
+        from src.config import _build
+
+        settings = _build(Settings, {"detection": {"model_path": str(tmp_path / "l.pt")}})
+        assert settings.detection.model_path == tmp_path / "l.onnx"
 
 
 class TestLegacyMigration:
@@ -215,13 +219,13 @@ class TestPathHandling:
         from src.config import _build
 
         monkeypatch.chdir(tmp_path)
-        settings = _build(Settings, {"detection": {"model_path": "models/x.pt"}})
-        assert settings.detection.model_path == paths.PROJECT_ROOT / "models" / "x.pt"
+        settings = _build(Settings, {"detection": {"model_path": "models/x.onnx"}})
+        assert settings.detection.model_path == paths.PROJECT_ROOT / "models" / "x.onnx"
 
     def test_absolute_paths_are_left_alone(self, tmp_path):
         from src.config import _build
 
-        absolute = tmp_path / "weights.pt"
+        absolute = tmp_path / "weights.onnx"
         settings = _build(Settings, {"detection": {"model_path": str(absolute)}})
         assert settings.detection.model_path == absolute
 
@@ -229,8 +233,8 @@ class TestPathHandling:
         from src import paths
 
         settings = Settings()
-        settings.detection.model_path = paths.MODELS_DIR / "largeModel.pt"
-        assert settings.to_dict()["detection"]["model_path"] == "models/largeModel.pt"
+        settings.detection.model_path = paths.MODELS_DIR / "largeModel.onnx"
+        assert settings.to_dict()["detection"]["model_path"] == "models/largeModel.onnx"
 
     def test_external_paths_serialise_absolute(self, tmp_path):
         settings = Settings()

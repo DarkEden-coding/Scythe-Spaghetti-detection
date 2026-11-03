@@ -33,6 +33,7 @@ from src.monitor import DebugDetectionControl
 from src.notify.base import BaseNotifier
 from src.printer.base import PrinterClient
 from src.settings_control import SettingsControl
+from src.web.setup_routes import SetupRoutes
 
 log = logging.getLogger(__name__)
 STATIC_DIR = Path(__file__).resolve().parent.parent / "web" / "static"
@@ -87,12 +88,25 @@ class WebNotifier(BaseNotifier):
             "last_detection": None,
         }
 
-        app = web.Application(middlewares=[self._security_headers])
+        middlewares = [self._security_headers]
+        self._setup: SetupRoutes | None = None
+        if settings_control is not None:
+            from src.cli import restart
+
+            self._setup = SetupRoutes(settings_control, restart=restart)
+            middlewares.append(self._setup.auth_middleware)
+
+        app = web.Application(middlewares=middlewares)
+        if self._setup is not None:
+            app.add_routes(self._setup.routes())
         app.add_routes(
             [
                 web.get("/", self._index),
+                web.get("/login", self._login_page),
                 web.get("/style.css", self._static),
                 web.get("/app.js", self._static),
+                web.get("/setup.js", self._static),
+                web.get("/login.js", self._static),
                 web.get("/logo.svg", self._static),
                 web.get("/discord-guide/{name:[a-z0-9-]+\\.svg}", self._static),
                 web.get("/api/state", self._get_state),
@@ -318,6 +332,9 @@ class WebNotifier(BaseNotifier):
     async def _index(self, _request: web.Request) -> web.FileResponse:
         """Serve the dashboard shell."""
         return web.FileResponse(STATIC_DIR / "index.html")
+
+    async def _login_page(self, _request: web.Request) -> web.FileResponse:
+        return web.FileResponse(STATIC_DIR / "login.html")
 
     async def _static(self, request: web.Request) -> web.FileResponse:
         """Serve one allow-listed static asset."""

@@ -12,10 +12,10 @@ import logging
 import sys
 from pathlib import Path
 
-from src.detection.export import export_onnx
 from src.errors import DetectorError
 from src.logging_setup import configure_logging
-from src.paths import DEFAULT_MODEL
+from src.paths import TRAINING_WEIGHTS as DEFAULT_MODEL
+from tools.export import export_onnx
 
 
 def main(argv: list[str] | None = None) -> int:
