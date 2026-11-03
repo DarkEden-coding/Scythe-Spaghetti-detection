@@ -182,3 +182,7 @@ models/*.engine
 # Training output.
 runs/
 datasets/
+
+# Tool caches and editor backups.
+.ruff_cache/
+*.blend1

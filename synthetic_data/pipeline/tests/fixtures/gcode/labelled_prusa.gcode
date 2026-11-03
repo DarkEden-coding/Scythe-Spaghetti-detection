@@ -1,0 +1,18 @@
+; printable_area = 0x0,100x0,100x100,0x100
+M83
+G1 X10 Y10 Z.2
+;TYPE:Outer wall
+M486 S7
+M486 Afirst copy
+G1 X20 E1 F600
+G1 Y11
+G1 X10 E1
+M486 S-1
+G1 X30 Y10
+M486 S42
+M486 Asecond copy
+G1 X40 E1
+G1 Y11
+G1 X30 E1
+M486 S-1
+G1 X0 Y0
