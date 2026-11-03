@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#0a0b0d">
   <title>Scythe — Printer Monitor</title>
   <link rel="icon" type="image/svg+xml" href="logo.svg">
-  <link rel="stylesheet" href="style.css?v=9">
+  <link rel="stylesheet" href="style.css?v=10">
   <script src="app.js?v=9" defer></script>
-  <script src="setup.js?v=1" defer></script>
+  <script src="setup.js?v=2" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -262,10 +262,10 @@
       <section class="setup-step" data-step="detection" hidden>
         <h3>How should Scythe look for failures?</h3>
         <div class="choice-list">
-          <label class="choice"><input type="radio" name="setup-backend" value="yolo">
-            <span><b>Local model</b> Free and private, runs on this machine. Catches spaghetti.</span></label>
           <label class="choice"><input type="radio" name="setup-backend" value="decision">
-            <span><b>AI decision model</b> Uses OpenRouter; under a cent per print-hour with the default model. Also catches layer shifts, warping and other failures.</span></label>
+            <span><b>AI decision model <em class="badge">Recommended</em></b> Catches spaghetti, layer shifts, warping, stringing and more. Uses OpenRouter; under a cent per print-hour with the default model.</span></label>
+          <label class="choice"><input type="radio" name="setup-backend" value="yolo">
+            <span><b>Local model</b> Free and private, runs on this machine. Catches spaghetti only.</span></label>
         </div>
         <label class="field" id="setup-api-key-field" hidden>
           <span>OpenRouter API key</span>

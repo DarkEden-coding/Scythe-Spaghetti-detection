@@ -207,7 +207,7 @@
         break;
       }
       case "detection": {
-        const backend = document.querySelector("[name=setup-backend]:checked")?.value || "yolo";
+        const backend = document.querySelector("[name=setup-backend]:checked")?.value || "decision";
         const changes = { backend };
         const key = $("setup-api-key").value.trim();
         if (key) changes.api_key = key;
@@ -302,7 +302,9 @@
     const settings = await request("api/settings").catch(() => null);
     $("setup-close").hidden = !status.setup_complete;
     $("setup-printer-url").value = status.printer.url;
-    const backend = settings?.values.backend || "yolo";
+    // First-time setup recommends the decision model; afterwards show the
+    // backend actually in use.
+    const backend = status.setup_complete ? settings?.values.backend || "yolo" : "decision";
     document.querySelectorAll("[name=setup-backend]").forEach((radio) => {
       radio.checked = radio.value === backend;
     });

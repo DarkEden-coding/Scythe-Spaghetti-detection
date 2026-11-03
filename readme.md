@@ -4,7 +4,7 @@ Scythe watches your 3D printer's camera and pauses the print when it fails. It r
 
 ![The setup wizard finding a printer and showing a test frame](readme_images/setup.png)
 
-- **Two ways to detect failures.** The bundled local model is free and private, and catches spaghetti. An AI decision model (OpenRouter, or self-hosted with Ollama) also catches layer shifts, warping, stringing, under-extrusion, cracking and parts knocked loose, for under a cent per print-hour.
+- **Two ways to detect failures.** The recommended AI decision model (OpenRouter, or self-hosted with Ollama) catches spaghetti, layer shifts, warping, stringing, under-extrusion, cracking and parts knocked loose, for under a cent per print-hour. The bundled local model is free and private, but only catches spaghetti.
 - **Web dashboard** with the live frame, detection boxes, and pause, resume and dismiss buttons.
 - **Discord alerts** with a photo, plus slash commands to pause or check the printer.
 - **Remote access through Tailscale**, set up from the dashboard, with no ports opened.
@@ -36,7 +36,7 @@ You need a 64-bit OS for the local model. On 32-bit Raspberry Pi OS, Scythe inst
 Open the address the installer printed. A setup wizard walks you through:
 
 1. **Printer.** Scythe finds Moonraker on the same machine by itself. Pick your camera and check the test picture.
-2. **Detection.** Local model or AI decision model. The AI option needs an [OpenRouter key](https://openrouter.ai/keys).
+2. **Detection.** The AI decision model is recommended and needs an [OpenRouter key](https://openrouter.ai/keys). The local model needs nothing.
 3. **Discord alerts** (optional), with a step-by-step guide to making the bot.
 4. **Remote access** (optional). One click installs Tailscale, another gives Scythe an HTTPS address like `https://printer.your-tailnet.ts.net/`. Another adds Scythe to Mainsail's sidebar.
 5. **Password** (optional).

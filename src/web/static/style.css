@@ -626,3 +626,13 @@ a:focus-visible {
 .setup h2 small { margin-left: 6px; color: var(--muted); font-size: 12px; font-weight: 500; }
 .setup-step a:not(.button) { color: var(--amber); }
 .choice:has(input:disabled) { opacity: .5; cursor: not-allowed; }
+.badge {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--amber) 18%, transparent);
+  color: var(--amber);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+}

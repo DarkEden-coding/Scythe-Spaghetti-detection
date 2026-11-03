@@ -1,6 +1,6 @@
 # Detection
 
-Scythe grabs a camera frame every 30 seconds while a print runs and checks it for failures. You choose how it checks in **Settings → Detection**.
+Scythe grabs a camera frame every 30 seconds while a print runs and checks it for failures. You choose how it checks in **Settings → Detection**. The decision model is recommended because it catches far more kinds of failure; the local model is the free, offline option.
 
 | Failure | Local model | Decision model |
 | --- | :-: | :-: |
