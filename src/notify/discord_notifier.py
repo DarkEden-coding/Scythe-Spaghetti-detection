@@ -38,6 +38,8 @@ log = logging.getLogger(__name__)
 ACK_EMOJI = "👍"
 STATUS_FILENAME = "current_view.jpg"
 FAIL_FILENAME = "spaghetti.jpg"
+#: Field names for decision-model scores in failure messages.
+SCORE_NAMES = {"any_failure": "Any failure", "layer_shift": "Layer shift"}
 
 
 class DiscordAcknowledgement:
@@ -346,12 +348,17 @@ class DiscordNotifier(BaseNotifier):
             )
 
         embed = discord.Embed(
-            title="Spaghetti detected!",
+            title=f"{event.result.label} detected!",
             description=f"{description}\n<@{self._settings.ping_user_id}>",
             color=discord.Color.red(),
         )
-        embed.add_field(name="Detections", value=str(event.result.count))
-        embed.add_field(name="Confidence", value=f"{event.result.max_confidence:.0%}")
+        if event.result.scores:
+            # Decision models answer several questions; show what each one said.
+            for name, score in event.result.scores:
+                embed.add_field(name=SCORE_NAMES.get(name, name), value=f"{score:.0%}")
+        else:
+            embed.add_field(name="Detections", value=str(event.result.count))
+            embed.add_field(name="Confidence", value=f"{event.result.max_confidence:.0%}")
         embed.set_footer(text=f"React with {ACK_EMOJI} to resume monitoring.")
 
         file = discord.utils.MISSING

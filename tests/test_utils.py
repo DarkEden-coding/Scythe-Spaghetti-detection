@@ -61,7 +61,27 @@ class CountingNotifier(NullNotifier):
         return None
 
 
+class StartBrokenNotifier(NullNotifier):
+    def __init__(self):
+        self.closed = False
+
+    async def start(self):
+        raise RuntimeError("login failed")
+
+    async def close(self):
+        self.closed = True
+
+
 class TestCompositeNotifier:
+    async def test_one_broken_channel_does_not_stop_the_others_at_startup(self):
+        broken = StartBrokenNotifier()
+        composite = CompositeNotifier([broken, CountingNotifier()])
+
+        await composite.start()
+
+        assert len(composite) == 1
+        assert broken.closed is True
+
     async def test_one_broken_channel_does_not_stop_the_others(self):
         healthy = CountingNotifier()
         composite = CompositeNotifier([BrokenNotifier(), healthy])

@@ -98,6 +98,7 @@ class FakeDetector:
         self.error = error
         self.calls = 0
         self.model_path = Path("fake-model.pt")
+        self.model_name = self.model_path.name
 
     def load(self) -> None:
         return None

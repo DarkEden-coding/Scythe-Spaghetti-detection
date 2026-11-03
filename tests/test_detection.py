@@ -94,11 +94,13 @@ class TestDetector:
         model = FakeModel([FakeBox((10, 10, 50, 50), 0.4, 1)])
         assert not SpaghettiDetector(settings, model=model).detect(frame)
 
-    def test_returns_the_preprocessed_frame(self, settings, frame):
-        model = FakeModel([FakeBox((10, 10, 50, 50), 0.9, 1)])
+    def test_returns_original_frame_with_boxes_mapped_to_it(self, settings, frame):
+        model = FakeModel([FakeBox((10, 20, 50, 60), 0.9, 1)])
         result = SpaghettiDetector(settings, model=model).detect(frame)
+
         assert result.image is not None
-        assert result.image.size == (640, 640)
+        assert result.image.size == (1280, 720)
+        assert result.boxes[0].as_tuple() == (20, 22, 100, 68)
 
     def test_writes_nothing_to_disk(self, settings, frame, tmp_path, monkeypatch):
         """The old detect() wrote fail_img.jpg on every call, including misses."""

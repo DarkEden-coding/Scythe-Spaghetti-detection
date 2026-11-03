@@ -72,6 +72,11 @@ class DiscordSettings:
     #: ``0`` waits forever.
     acknowledge_timeout: float = 0.0
 
+    @property
+    def enabled(self) -> bool:
+        """An empty token turns Discord off; the dashboard still works."""
+        return bool(self.bot_token)
+
     def validate(self) -> None:
         if self.bot_token in PLACEHOLDERS:
             raise ConfigError(
@@ -119,9 +124,119 @@ class PrinterSettings:
 
 
 @dataclass
+class WebSettings:
+    """Local operator dashboard bind settings."""
+
+    enabled: bool = True
+    host: str = "0.0.0.0"
+    port: int = 8080
+
+    def validate(self) -> None:
+        """Validate the dashboard listener address."""
+        if not self.host.strip():
+            raise ConfigError("web.host is required.")
+        if not 1 <= self.port <= 65535:
+            raise ConfigError("web.port must be between 1 and 65535.")
+
+
+DETECTION_BACKENDS = frozenset({"yolo", "decision"})
+
+#: Decision-model providers and the endpoint each one uses unless
+#: ``detection.decision.base_url`` overrides it.
+DECISION_PROVIDERS = {
+    "openrouter": "https://openrouter.ai/api/alpha/decisions",
+    "ollama": "http://localhost:11434/v1/systemone",
+}
+
+
+@dataclass
+class DecisionSettings:
+    """Decision-model backend (``detection.backend = "decision"``).
+
+    Defaults come from the print-failure evaluation (see
+    ``PRINT_FAILURE_EVAL_FINDINGS.md``): a crop around the part and a
+    layer-shift-specific question mattered more than the choice of model.
+    """
+
+    #: ``openrouter`` for the hosted API, ``ollama`` for a self-hosted server.
+    provider: str = "openrouter"
+    #: Endpoint override; empty uses the provider's default.
+    base_url: str = ""
+    api_key: str = ""
+    #: d1-ultra matched Jev in good light and was the best cloud model in the
+    #: dark, at about half Jev's price.
+    model: str = "~liquid/d1-ultra-latest"
+    #: Flag a failure when any question's P(yes) reaches this. Decision models
+    #: are poorly calibrated, so tune it per model on your own frames.
+    threshold: float = 0.6
+    #: Optional crop around the part as ``left,top,right,bottom`` fractions of
+    #: the frame, e.g. ``0.32,0.21,0.93,0.61``. Empty sends the full frame.
+    crop: str = ""
+    #: Longest side of the image sent to the model, in pixels.
+    image_max_side: int = 1240
+    request_timeout: float = 30.0
+
+    def validate(self, require_key: bool = True) -> None:
+        if self.provider not in DECISION_PROVIDERS:
+            raise ConfigError(
+                f"detection.decision.provider must be one of "
+                f"{sorted(DECISION_PROVIDERS)}, got {self.provider!r}."
+            )
+        if self.base_url and not self.base_url.startswith(("http://", "https://")):
+            raise ConfigError(
+                "detection.decision.base_url must start with http:// or https://."
+            )
+        if require_key and self.provider == "openrouter" and self.api_key in PLACEHOLDERS:
+            raise ConfigError(
+                "detection.decision.api_key is not set. Enter it in the dashboard "
+                f"settings or set {ENV_PREFIX}_DETECTION_DECISION_API_KEY."
+            )
+        if not self.model.strip():
+            raise ConfigError("detection.decision.model is required.")
+        if not 0.0 < self.threshold <= 1.0:
+            raise ConfigError(
+                "detection.decision.threshold must be between 0 (exclusive) and 1."
+            )
+        self.crop_box()
+        if self.image_max_side < 256:
+            raise ConfigError("detection.decision.image_max_side must be at least 256.")
+        if self.request_timeout <= 0:
+            raise ConfigError("detection.decision.request_timeout must be positive.")
+
+    @property
+    def endpoint(self) -> str:
+        return self.base_url or DECISION_PROVIDERS.get(self.provider, "")
+
+    def crop_box(self) -> tuple[float, float, float, float] | None:
+        """Parse :attr:`crop` into fractions, or ``None`` for the full frame."""
+        if not self.crop.strip():
+            return None
+        try:
+            left, top, right, bottom = (float(part) for part in self.crop.split(","))
+        except ValueError as exc:
+            raise ConfigError(
+                "detection.decision.crop must be four comma-separated fractions: "
+                f"left,top,right,bottom. Got {self.crop!r}."
+            ) from exc
+        if not (0.0 <= left < right <= 1.0 and 0.0 <= top < bottom <= 1.0):
+            raise ConfigError(
+                "detection.decision.crop fractions must satisfy "
+                f"0 <= left < right <= 1 and 0 <= top < bottom <= 1. Got {self.crop!r}."
+            )
+        return left, top, right, bottom
+
+
+@dataclass
 class DetectionSettings:
     """Model selection and inference thresholds."""
 
+    #: ``yolo`` runs the bundled local model; ``decision`` asks a decision
+    #: model (OpenRouter or self-hosted) instead.
+    backend: str = "yolo"
+    decision: DecisionSettings = field(default_factory=DecisionSettings)
+    #: Seconds between detections. Frames are still captured every
+    #: ``target_loop_time``; ``0`` runs detection on every captured frame.
+    interval: float = 0.0
     model_path: Path = paths.DEFAULT_MODEL
     use_cuda: bool = False
     use_onnx: bool = True
@@ -133,6 +248,16 @@ class DetectionSettings:
     save_annotated_frames: bool = True
 
     def validate(self) -> None:
+        if self.backend not in DETECTION_BACKENDS:
+            raise ConfigError(
+                f"detection.backend must be one of {sorted(DETECTION_BACKENDS)}, "
+                f"got {self.backend!r}."
+            )
+        if self.interval < 0:
+            raise ConfigError("detection.interval cannot be negative.")
+        if self.backend == "decision":
+            self.decision.validate()
+            return
         if not 0.0 < self.min_confidence <= 1.0:
             raise ConfigError(
                 "detection.min_confidence must be between 0 (exclusive) and 1."
@@ -164,6 +289,7 @@ class Settings:
     discord: DiscordSettings = field(default_factory=DiscordSettings)
     printer: PrinterSettings = field(default_factory=PrinterSettings)
     detection: DetectionSettings = field(default_factory=DetectionSettings)
+    web: WebSettings = field(default_factory=WebSettings)
 
     #: Target seconds between monitor iterations.
     target_loop_time: float = 30.0
@@ -182,9 +308,13 @@ class Settings:
             "CRITICAL",
         }:
             raise ConfigError(f"Unknown log_level {self.log_level!r}.")
-        self.discord.validate()
+        # Discord is optional when the dashboard is on, so there is always
+        # somewhere for alerts to go.
+        if self.discord.enabled or not self.web.enabled:
+            self.discord.validate()
         self.printer.validate()
         self.detection.validate()
+        self.web.validate()
         return self
 
     def to_dict(self) -> dict[str, Any]:
@@ -449,6 +579,35 @@ def load_settings(
     return settings.validate() if validate else settings
 
 
+def save_overrides(changes: Mapping[str, Any], path: Path | None = None) -> Path:
+    """Merge ``changes`` into the config file without touching other keys.
+
+    Saving the whole :class:`Settings` would also write values that came from
+    environment variables, such as a bot token kept out of the file on purpose.
+    """
+    target = path or paths.config_path()
+    raw: dict[str, Any] = {}
+    if target.exists():
+        try:
+            raw = json.loads(target.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise ConfigError(f"{target} is not valid JSON: {exc}") from exc
+    target.parent.mkdir(parents=True, exist_ok=True)
+    merged = _deep_merge(raw, _to_jsonable_mapping(changes))
+    target.write_text(json.dumps(merged, indent=2) + "\n", encoding="utf-8")
+    _restrict_permissions(target)
+    return target
+
+
+def _to_jsonable_mapping(changes: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        key: _to_jsonable_mapping(value)
+        if isinstance(value, Mapping)
+        else _to_jsonable(value)
+        for key, value in changes.items()
+    }
+
+
 def settings_exist(path: Path | None = None) -> bool:
     """True if either the current or the legacy config file is present."""
     return (path or paths.config_path()).exists() or paths.LEGACY_CONFIG_PATH.exists()
@@ -457,11 +616,14 @@ def settings_exist(path: Path | None = None) -> bool:
 __all__ = [
     "DetectionSettings",
     "DiscordSettings",
+    "DecisionSettings",
     "PrinterSettings",
     "Settings",
+    "WebSettings",
     "env_var_names",
     "load_settings",
     "parse_bool",
     "read_legacy_settings",
+    "save_overrides",
     "settings_exist",
 ]

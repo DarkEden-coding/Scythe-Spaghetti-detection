@@ -164,12 +164,12 @@ def cmd_run(args: argparse.Namespace) -> int:
             log.info("Auto-update: %s", result.message)
         if result.restart_required:
             log.info("Code changed; restarting into the new version.")
-            _restart()
+            restart()
 
-    return Application(settings).run()
+    return Application(settings, config_path=args.config).run()
 
 
-def _restart() -> None:
+def restart() -> None:
     """Replace this process with a fresh one.
 
     ``os.execv`` rather than ``subprocess.run``: the previous implementation

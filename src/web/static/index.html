@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0b0d">
+  <title>Scythe — Printer Monitor</title>
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="stylesheet" href="style.css?v=7">
+  <script src="app.js?v=8" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Scythe dashboard">
+      <img class="brand-mark" src="logo.svg" alt="">
+      <span>Scythe</span>
+    </a>
+    <span class="status-pill" id="printer-pill"><i></i><span id="printer-state">Connecting</span></span>
+    <button class="switch" id="debug-detection-button" type="button" role="switch" aria-checked="false">
+      Detect while idle <b aria-hidden="true"></b>
+    </button>
+    <button class="icon-button topbar-icon" id="settings-button" type="button" aria-label="Settings" title="Settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></svg>
+    </button>
+  </header>
+
+  <dialog class="settings" id="settings-dialog" aria-labelledby="settings-title">
+    <form id="settings-form" method="dialog">
+      <header class="settings-head">
+        <h2 id="settings-title">Settings</h2>
+        <button class="icon-button" type="button" id="settings-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+        </button>
+      </header>
+
+      <div class="settings-body">
+        <section class="field-group">
+          <h3>Detection</h3>
+          <div class="segmented" role="radiogroup" aria-label="Detection backend">
+            <label><input type="radio" name="backend" value="decision"><span>Decision model</span></label>
+            <label><input type="radio" name="backend" value="yolo"><span>Local YOLO model</span></label>
+          </div>
+          <div class="modes" data-backend="decision">
+            <span>Catches</span>
+            <ul>
+              <li>Spaghetti</li><li>Stringing</li><li>Under-extrusion</li><li>Warping</li>
+              <li>Layer shift</li><li>Layer cracking</li><li>Part knocked loose</li>
+            </ul>
+            <small>Tested on real prints for layer shifts only. Ignores nozzle blobs, purge lines, brims and supports.</small>
+          </div>
+          <div class="modes" data-backend="yolo">
+            <span>Catches</span>
+            <ul><li>Spaghetti</li></ul>
+            <small>Switch to a decision model to also catch layer shifts, warping and other failures.</small>
+          </div>
+          <label class="check"><input type="checkbox" name="pause_on_failure"> Pause the print when a failure is detected</label>
+        </section>
+
+        <section class="field-group" data-backend="decision">
+          <h3>Decision model</h3>
+          <div class="field-row">
+            <label class="field">
+              <span>Provider</span>
+              <select name="provider">
+                <option value="openrouter">OpenRouter</option>
+                <option value="ollama">Self-hosted (Ollama)</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Endpoint</span>
+              <input name="base_url" type="url" autocomplete="off" spellcheck="false">
+            </label>
+          </div>
+          <label class="field" data-provider="openrouter">
+            <span>API key</span>
+            <input name="api_key" type="password" autocomplete="off" spellcheck="false">
+            <small id="api-key-hint"></small>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Model</span>
+              <input name="model" list="model-options" autocomplete="off" spellcheck="false">
+              <datalist id="model-options"></datalist>
+            </label>
+            <label class="field field-narrow">
+              <span>Alert threshold</span>
+              <input name="threshold" type="number" min="0.05" max="1" step="0.05">
+            </label>
+          </div>
+          <div class="field">
+            <span>Crop to the part <small>drag on the frame · makes small failures visible</small></span>
+            <div class="crop-picker" id="crop-picker">
+              <img id="crop-image" alt="Latest camera frame for choosing the crop">
+              <div class="crop-rect" id="crop-rect" hidden></div>
+              <p class="crop-empty" id="crop-empty">No camera frame yet.</p>
+            </div>
+            <div class="crop-actions">
+              <small id="crop-label">Full frame</small>
+              <button class="link-button" type="button" id="crop-clear">Use full frame</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="field-group" data-backend="yolo">
+          <h3>Local model</h3>
+          <label class="field field-narrow">
+            <span>Minimum confidence</span>
+            <input name="yolo_confidence" type="number" min="0.05" max="1" step="0.05">
+          </label>
+        </section>
+
+        <section class="field-group">
+          <h3>Rates</h3>
+          <div class="field-row">
+            <label class="field">
+              <span>Capture a frame every</span>
+              <span class="suffix"><input name="capture_interval" type="number" min="5" step="1"><i>s</i></span>
+            </label>
+            <label class="field">
+              <span>Run detection every</span>
+              <span class="suffix"><input name="detection_interval" type="number" min="0" step="1"><i>s</i></span>
+              <small>0 checks every captured frame</small>
+            </label>
+          </div>
+          <p class="estimate" id="settings-estimate" data-backend="decision"></p>
+        </section>
+
+        <section class="field-group">
+          <h3>Discord <button class="link-button" type="button" data-open-guide>How do I set this up?</button></h3>
+          <label class="field">
+            <span>Bot token</span>
+            <input name="discord_token" type="password" autocomplete="off" spellcheck="false">
+            <small id="discord-token-hint"></small>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Channel ID</span>
+              <input name="discord_channel_id" inputmode="numeric" autocomplete="off" placeholder="Right-click channel → Copy ID">
+            </label>
+            <label class="field">
+              <span>Your user ID</span>
+              <input name="discord_user_id" inputmode="numeric" autocomplete="off" placeholder="Pinged on failures">
+            </label>
+          </div>
+          <label class="field">
+            <span>Status messages</span>
+            <select name="discord_status_mode">
+              <option value="edit">Keep one message updated</option>
+              <option value="message">Post a new one each frame</option>
+              <option value="silent">Alerts only</option>
+            </select>
+          </label>
+        </section>
+
+        <p class="env-note" id="env-note" hidden></p>
+      </div>
+
+      <footer class="settings-foot">
+        <p class="settings-error" id="settings-error" role="alert"></p>
+        <button class="button button-ghost" type="button" id="settings-cancel">Cancel</button>
+        <button class="button button-primary" type="submit" id="settings-save">Save</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div class="restart-banner" id="restart-banner" role="status" hidden>
+    <span>Discord settings saved. Restart Scythe to connect with them.</span>
+    <button class="button button-primary" type="button" id="restart-button">Restart now</button>
+  </div>
+
+  <aside class="nudge" id="discord-nudge" hidden>
+    <button class="icon-button nudge-close" type="button" id="discord-nudge-close" aria-label="Dismiss">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+    </button>
+    <b>Get failure alerts on Discord</b>
+    <p>Pings you with a photo when a print fails, even away from home. Takes about 5 minutes.</p>
+    <button class="button button-primary" type="button" data-open-guide>Show me how</button>
+  </aside>
+
+  <dialog class="settings guide" id="discord-guide" aria-labelledby="guide-title">
+    <header class="settings-head">
+      <h2 id="guide-title">Set up Discord alerts <small id="guide-count"></small></h2>
+      <button class="icon-button" type="button" id="guide-close" aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+      </button>
+    </header>
+    <div class="settings-body">
+      <section class="guide-step">
+        <h3>1. Create a bot and copy its token</h3>
+        <p>Open the <a href="https://discord.com/developers/applications" target="_blank" rel="noopener">Discord Developer Portal</a>, click <b>New Application</b> and name it “Scythe”. Go to <b>Bot</b>, click <b>Reset Token</b>, then <b>Copy</b>. Paste it into <b>Bot token</b> in Settings.</p>
+        <img src="discord-guide/bot-token.svg" alt="Developer Portal Bot page with the Reset Token and Copy buttons highlighted">
+        <p class="guide-note">Treat the token like a password. Anyone who has it can control the bot.</p>
+      </section>
+      <section class="guide-step" hidden>
+        <h3>2. Invite the bot to your server</h3>
+        <p id="invite-text">Paste the token in Settings first; an invite link with the right permissions will appear here. Otherwise use <b>OAuth2 → URL Generator</b> with the <b>bot</b> and <b>applications.commands</b> scopes.</p>
+        <a class="button button-primary guide-invite" id="invite-link" target="_blank" rel="noopener" hidden>Open invite link</a>
+        <img src="discord-guide/invite.svg" alt="Discord authorize screen with the server picker highlighted">
+      </section>
+      <section class="guide-step" hidden>
+        <h3>3. Turn on Developer Mode</h3>
+        <p>In Discord, open <b>User Settings → Advanced</b> and switch on <b>Developer Mode</b>. This adds “Copy ID” to right-click menus.</p>
+        <img src="discord-guide/developer-mode.svg" alt="Discord Advanced settings with the Developer Mode switch highlighted">
+      </section>
+      <section class="guide-step" hidden>
+        <h3>4. Copy the channel and user IDs</h3>
+        <p>Right-click the channel for alerts and choose <b>Copy Channel ID</b>. Then right-click your own name and choose <b>Copy User ID</b>. Paste both into Settings, save, and restart when asked.</p>
+        <img src="discord-guide/copy-ids.svg" alt="Right-click menus with Copy Channel ID and Copy User ID highlighted">
+        <p class="guide-note">Only this user can run the bot’s slash commands, such as /pause.</p>
+      </section>
+    </div>
+    <footer class="settings-foot">
+      <span class="settings-error"></span>
+      <button class="button button-ghost" type="button" id="guide-back">Back</button>
+      <button class="button button-primary" type="button" id="guide-next">Next</button>
+    </footer>
+  </dialog>
+
+  <div class="system-banner" id="system-banner" role="status" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5m0 3.5v.5M4.2 19h15.6L12 4 4.2 19Z" /></svg>
+    <span id="system-message"></span>
+  </div>
+
+  <main class="layout">
+    <section class="camera" id="camera-stage" aria-label="Latest camera frame">
+      <div class="camera-empty" id="camera-empty">Waiting for the first camera frame…</div>
+      <img id="camera-image" src="api/frame.jpg" alt="Latest printer camera frame" hidden>
+      <svg class="detection-overlay" id="detection-overlay" aria-hidden="true"></svg>
+      <div class="frame-chip" id="frame-chip" hidden></div>
+      <button class="icon-button" id="overlay-toggle" type="button" aria-pressed="true" aria-label="Show detection boxes" title="Show detection boxes">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V3h4M17 3h4v4M21 17v4h-4M7 21H3v-4M8 8h8v8H8z" /></svg>
+      </button>
+      <div class="cadence-track" aria-hidden="true"><div class="cadence-fill" id="cadence-fill"></div></div>
+    </section>
+
+    <aside class="side">
+      <section class="card verdict" id="verdict">
+        <div class="eyebrow"><i></i><span id="verdict-eyebrow">Waiting</span></div>
+        <h1 id="verdict-title">No inspection yet</h1>
+        <p class="verdict-detail" id="verdict-detail">Results appear after the first scan.</p>
+        <div class="stat" id="verdict-stat" hidden><b id="verdict-confidence"></b><span>confidence</span></div>
+        <div class="actions">
+          <button class="button button-danger" id="pause-button" type="button" hidden>Pause print</button>
+          <button class="button button-primary" id="resume-button" type="button" hidden>Resume print</button>
+          <button class="button button-ghost" id="acknowledge-button" type="button" hidden>Dismiss — print is fine</button>
+        </div>
+        <p class="control-result" id="control-result" aria-live="polite"></p>
+      </section>
+
+      <section class="card previous" id="last-detection" hidden>
+        <span>Previous alert</span><b id="last-detection-summary"></b>
+      </section>
+    </aside>
+  </main>
+</body>
+</html>

@@ -6,6 +6,7 @@
 #
 # Equivalent to: pip install -e ".[onnx]"
 
+aiohttp>=3.9,<4
 discord.py>=2.3,<3
 ultralytics>=8.1,<9
 requests>=2.31,<3

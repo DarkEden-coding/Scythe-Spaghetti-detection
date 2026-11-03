@@ -103,7 +103,11 @@ class TestWizard:
     def test_invalid_config_is_still_written_with_a_warning(self, tmp_path, no_legacy):
         target = tmp_path / "settings.json"
         messages: list[str] = []
-        run_wizard(target, input_fn=scripted(answers()), output_fn=messages.append)
+        run_wizard(
+            target,
+            input_fn=scripted(answers(**{"discord.bot_token": "CHANGEME"})),
+            output_fn=messages.append,
+        )
         assert target.exists()
         assert any("not yet usable" in m for m in messages)
 

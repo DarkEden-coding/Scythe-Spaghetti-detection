@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <path id="shield" d="M24 3 41 9.5v12.5c0 11.5-7.5 19-17 23C14.5 41 7 33.5 7 22V9.5z"/>
+    <clipPath id="inside"><use href="#shield"/></clipPath>
+  </defs>
+  <use href="#shield" fill="#181c21"/>
+  <path clip-path="url(#inside)" stroke="#262b32" stroke-width="1.4" d="M0 12h48M0 16h48M0 20h48M0 24h48M0 28h48M0 32h48M0 36h48M0 40h48"/>
+  <use href="#shield" fill="none" stroke="#ffbd22" stroke-width="2.6" stroke-linejoin="round"/>
+  <path d="M31.5 14H20a5 5 0 0 0 0 10h8a5 5 0 0 1 0 10H16.5" fill="none" stroke="#ffbd22" stroke-width="4" stroke-linecap="round"/>
+</svg>

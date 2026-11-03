@@ -42,8 +42,8 @@ class DetectionBox:
 class DetectionResult:
     """Outcome of a single inference pass.
 
-    ``image`` is the preprocessed frame the model actually saw, so annotations
-    line up with the boxes without any rescaling at the call site.
+    ``image`` is the original camera frame and boxes use that frame's pixel
+    coordinates. The detector handles mapping from its square model input.
     """
 
     boxes: tuple[DetectionBox, ...] = ()
@@ -52,6 +52,11 @@ class DetectionResult:
     #: Every box the model returned, including classes we ignore — useful when
     #: tuning thresholds from the logs.
     considered: tuple[DetectionBox, ...] = field(default=(), repr=False)
+    #: What was found, for messages. The YOLO model only knows spaghetti;
+    #: decision models also name the failure type they flagged.
+    label: str = "Spaghetti"
+    #: Per-question probabilities from a decision model, highest first.
+    scores: tuple[tuple[str, float], ...] = ()
 
     def __bool__(self) -> bool:
         """True when spaghetti was found.
@@ -71,8 +76,8 @@ class DetectionResult:
 
     def summary(self) -> str:
         if not self.boxes:
-            return f"no spaghetti ({self.duration_seconds:.2f}s)"
+            return f"no failure ({self.duration_seconds:.2f}s)"
         return (
-            f"{self.count} detection(s), max confidence "
+            f"{self.label}: {self.count} detection(s), max confidence "
             f"{self.max_confidence:.2f} ({self.duration_seconds:.2f}s)"
         )

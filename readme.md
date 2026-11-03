@@ -12,14 +12,15 @@ Hello, thanks for checking out my project! This is a **simple and lightweight** 
 - [x] *Open Source*
 - [x] *Self Hosted*
 - [x] **Linux and Windows Support**
-- [x] **YOLOv8 Object Detection**
+- [x] **YOLOv8 Object Detection** (spaghetti)
+- [x] **Decision-model detection** via OpenRouter or self-hosted Ollama (spaghetti, stringing, under-extrusion, warping, layer shifts, layer cracking, parts knocked loose)
 - [x] *Large Model Trained*
 - [x] Any Linux or Windows-based system support (theoretically, not yet tested, should only require Python support)
 - [ ] XL Model Trained
 - [ ] Medium Model Trained
 - [ ] Small Model Trained
 - [ ] Nano Model Trained
-- [ ] Web Interface
+- [x] **Local Web Interface**
 - [ ] Email Notifications
 
 ## Slash Commands
@@ -59,7 +60,7 @@ python3 -m src configure
 ```
 Follow the on screen instructions. Press Enter at any prompt to keep the value in brackets.
 
-2. To get the bot token, follow this guide: https://discordpy.readthedocs.io/en/stable/discord.html
+2. To get the bot token, follow this guide: https://discordpy.readthedocs.io/en/stable/discord.html. The dashboard also has a step-by-step guide: open **Settings → Discord → How do I set this up?**. Discord is optional; leave the token empty to use only the dashboard.
 3. To get the discord channel id and user id enable developer mode (settings -> advanced -> dev mode) in discord and right click the channel/user and click "copy id"
 
 Settings are written to `settings.json`. **That file contains your bot token — it is gitignored, keep it that way.**
@@ -74,11 +75,14 @@ This validates the config, reads the print state, resolves the webcam, and pulls
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `discord.bot_token` | — | Your bot token. |
+| `discord.bot_token` | — | Your bot token. Leave empty to run with only the web dashboard. |
 | `discord.log_channel_id` | — | Channel the bot posts to. |
 | `discord.ping_user_id` | — | Who gets pinged on a failure. |
 | `discord.status_update_mode` | `edit` | `edit` keeps one status message current, `message` posts a new one each loop, `silent` posts none. |
 | `discord.acknowledge_timeout` | `0` | Seconds to wait for a 👍 after a failure before resuming. `0` waits forever. |
+| `web.enabled` | `true` | Serve the local operator dashboard with monitoring. |
+| `web.host` | `0.0.0.0` | Listen on every interface so other devices on the LAN can connect. |
+| `web.port` | `8080` | Dashboard HTTP port. |
 | `printer.url` | `http://mainsailos.local/` | Moonraker address. |
 | `printer.webcam_name` | `Bed` | Exactly as it appears in Mainsail/Fluidd. Case sensitive. |
 | `printer.request_timeout` | `10` | Seconds before a request to the printer gives up. |
@@ -87,7 +91,17 @@ This validates the config, reads the print state, resolves the webcam, and pulls
 | `detection.use_onnx` | `true` | Use the ONNX runtime — much faster on a Pi. |
 | `detection.min_confidence` | `0.6` | Raise for fewer false positives, lower for fewer misses. |
 | `detection.save_annotated_frames` | `true` | Keep failure frames in `data/detections/`. |
-| `target_loop_time` | `30` | Seconds between checks. |
+| `detection.backend` | `yolo` | `yolo` runs the bundled model locally; `decision` asks a decision model (see below). |
+| `detection.interval` | `0` | Seconds between detections. `0` checks every captured frame. |
+| `detection.decision.provider` | `openrouter` | `openrouter`, or `ollama` for a self-hosted model. |
+| `detection.decision.base_url` | — | Endpoint override. Empty uses the provider's default. |
+| `detection.decision.api_key` | — | OpenRouter key. Or set `SCYTHE_DETECTION_DECISION_API_KEY`. |
+| `detection.decision.model` | `~liquid/d1-ultra-latest` | Decision model id. |
+| `detection.decision.threshold` | `0.6` | Flag a failure when any answer's probability reaches this. |
+| `detection.decision.crop` | — | Crop around the part as `left,top,right,bottom` fractions. Easier to set by dragging in the dashboard. |
+| `detection.decision.image_max_side` | `1240` | Longest side of the image sent, in pixels. 1240 matches the evaluation. |
+| `detection.decision.request_timeout` | `30` | Seconds before a request gives up. |
+| `target_loop_time` | `30` | Seconds between camera frames. |
 | `pause_on_spaghetti` | `true` | Pause the print when a failure is detected. |
 | `enable_auto_update` | `false` | Pull updates from git on start. |
 | `log_level` | `INFO` | `DEBUG` when reporting a bug. |
@@ -99,6 +113,30 @@ export SCYTHE_DISCORD_BOT_TOKEN=...
 ```
 Precedence is defaults → `settings.json` → environment.
 
+### Decision models
+The bundled YOLO model only knows spaghetti. Instead, Scythe can ask a [decision model](https://openrouter.ai/docs/guides/community/jev) about each frame, which catches more kinds of failure:
+
+| Failure | YOLO | Decision model |
+| --- | :-: | :-: |
+| Spaghetti | ✓ | ✓ |
+| Stringing | | ✓ |
+| Under-extrusion | | ✓ |
+| Warping | | ✓ |
+| Layer shift | | ✓ (tested on real prints) |
+| Layer cracking | | ✓ |
+| Part knocked loose | | ✓ |
+
+Each frame gets two yes/no questions, worded exactly as in the evaluation: whether the print shows any of the failures above (ignoring nozzle blobs, purge lines, brims and supports), and whether it has a layer shift. Each answer is a probability, and a failure is reported when either one reaches the alert threshold. Discord and dashboard alerts say which one fired (*Layer shift detected!* or *Print failure detected!*) and show both scores.
+
+Set it up from the dashboard: open **Settings** (the gear in the top bar), choose **Decision model**, paste an [OpenRouter API key](https://openrouter.ai/settings/keys), and drag a box around the part on the camera frame. Changes apply immediately and are saved to `settings.json`; the key is never sent back to the browser.
+
+- **Model.** The default, Liquid d1-ultra, did best in testing on a real printer: it caught almost every layer-shifted frame in good light and was the most reliable cloud model in the dark. Jev 1.14 is as good in the light at about twice the price.
+- **Crop.** Cropping to the part mattered more than the model. Without it, small failures are lost in the frame.
+- **Rates.** *Capture every* sets how often the camera frame refreshes; *run detection every* sets how often a frame is sent to the model. The panel shows the expected cost per print-hour, which is about $0.003 at one detection a minute with d1-ultra. Nothing is sent while the printer is idle.
+- **Threshold.** Probabilities aren't calibrated the same way across models, so check the threshold against your own prints. `log_level: DEBUG` logs every score.
+- **Light the bed.** No model was reliable on dark frames.
+- **Self-hosting.** Choose the *Self-hosted (Ollama)* provider to use a decision model served by [Ollama](https://ollama.com) (default endpoint `http://localhost:11434/v1/systemone`, no key needed). `d3:4b` gave good results in testing on a desktop GPU.
+
 ### Upgrading from an older version
 If you already have a `settings.py`, your values are imported automatically the first time you run `scythe configure` (the file is parsed, never executed). **Delete `settings.py` afterwards — it still contains your bot token.**
 
@@ -106,6 +144,22 @@ If you already have a `settings.py`, your values are imported automatically the 
 ```bash
 python3 -m src run     # or: scythe run, or: python3 main.py
 ```
+
+### Web dashboard
+
+The dashboard starts with the monitor at `http://<scythe-host>:8080`. It shows
+the latest camera frame at the configured detection cadence, draws current
+detection boxes, reports the latest alert, and provides state-aware pause,
+resume, and acknowledgment controls. The **Idle detection** toggle temporarily
+runs inference while the printer is not active for debugging; it resets to off
+on restart and never pauses the printer, notifies Discord, or waits for an
+acknowledgment.
+
+The dashboard intentionally has no login and binds to the local network by
+default. Do not port-forward it or expose it to the public internet. Set
+`web.host` to `127.0.0.1` if it will only be used through a local reverse proxy.
+
+The monitor command starts both Discord and the dashboard.
 
 To start on boot, use a systemd service. A ready-made unit is in [`deploy/scythe.service`](deploy/scythe.service):
 ```bash
@@ -120,6 +174,23 @@ systemctl status scythe
 journalctl -u scythe -f
 ```
 Logs are also written to `data/scythe.log`.
+
+## Opening Scythe from Mainsail:
+Mainsail has no plugin system, but it can add links to its sidebar. Both steps below live outside Mainsail's own files, so Mainsail updates leave them alone.
+
+1. Serve the dashboard under `/scythe/` on Mainsail's address. In `/etc/nginx/sites-available/mainsail`, add this inside the `server { ... }` block, then run `sudo systemctl reload nginx`:
+   ```nginx
+   location /scythe/ {
+       proxy_pass http://127.0.0.1:8090/;
+       proxy_buffering off;
+   }
+   ```
+   Change `8090` if you set a different dashboard port.
+2. Create `~/printer_data/config/.theme/navi.json`:
+   ```json
+   [{"title": "Scythe", "href": "/scythe/", "target": "_self", "position": 85}]
+   ```
+   Reload Mainsail and Scythe appears in the sidebar. Clicking the Scythe logo goes back to Mainsail.
 
 ## Discord Message UI:
 ### status:

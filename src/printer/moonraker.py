@@ -8,6 +8,7 @@ first frame instead of killing the process at import time.
 from __future__ import annotations
 
 import logging
+import secrets
 import threading
 from io import BytesIO
 from urllib.parse import urljoin
@@ -152,8 +153,10 @@ class MoonrakerClient:
             log.warning("Could not resolve webcam URL: %s", exc)
             return None
 
+        separator = "&" if "?" in url else "?"
+        fresh_url = f"{url}{separator}_scythe={secrets.token_hex(8)}"
         try:
-            response = self._get(url)
+            response = self._get(fresh_url)
         except PrinterUnavailable as exc:
             log.warning("Snapshot request failed: %s", exc)
             # The snapshot URL may have changed (camera re-added); rediscover.

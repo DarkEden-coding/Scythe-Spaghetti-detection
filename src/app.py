@@ -12,13 +12,17 @@ import asyncio
 import contextlib
 import logging
 import signal
+from pathlib import Path
 
-from src.config import Settings
+from src.config import DetectionSettings, Settings
+from src.detection.decision import DecisionDetector
 from src.detection.detector import SpaghettiDetector
-from src.monitor import MonitorLoop
+from src.detection.switchable import SwitchableDetector
+from src.monitor import DebugDetectionControl, MonitorLoop
 from src.notify.base import CompositeNotifier, Notifier
 from src.printer.base import PrinterClient
 from src.printer.moonraker import MoonrakerClient
+from src.settings_control import SettingsControl
 
 log = logging.getLogger(__name__)
 
@@ -27,19 +31,44 @@ def build_printer(settings: Settings) -> PrinterClient:
     return MoonrakerClient(settings.printer)
 
 
-def build_detector(settings: Settings) -> SpaghettiDetector:
-    return SpaghettiDetector(settings.detection)
+def make_detector(detection: DetectionSettings) -> SpaghettiDetector | DecisionDetector:
+    if detection.backend == "decision":
+        return DecisionDetector(detection)
+    return SpaghettiDetector(detection)
 
 
-def build_notifier(settings: Settings, printer: PrinterClient) -> Notifier:
+def build_detector(settings: Settings) -> SwitchableDetector:
+    return SwitchableDetector(make_detector, settings.detection)
+
+
+def build_notifier(
+    settings: Settings,
+    printer: PrinterClient,
+    debug_detection: DebugDetectionControl,
+    settings_control: SettingsControl | None = None,
+) -> Notifier:
     """Assemble the configured notification channels.
 
     Imported lazily so that ``scythe check`` and the test suite do not need the
-    Discord library merely to construct settings.
+    channel libraries merely to construct settings.
     """
     from src.notify.discord_notifier import DiscordNotifier
 
-    channels: list[Notifier] = [DiscordNotifier(settings.discord, printer)]
+    channels: list[Notifier] = []
+    if settings.discord.enabled:
+        channels.append(DiscordNotifier(settings.discord, printer))
+    if settings.web.enabled:
+        from src.notify.web_notifier import WebNotifier
+
+        channels.append(
+            WebNotifier(
+                settings.web,
+                printer,
+                settings.target_loop_time,
+                debug_detection,
+                settings_control,
+            )
+        )
     return channels[0] if len(channels) == 1 else CompositeNotifier(channels)
 
 
@@ -50,13 +79,20 @@ class Application:
         self,
         settings: Settings,
         printer: PrinterClient | None = None,
-        detector: SpaghettiDetector | None = None,
+        detector: SwitchableDetector | None = None,
         notifier: Notifier | None = None,
+        config_path: Path | None = None,
     ):
         self._settings = settings
         self._printer = printer or build_printer(settings)
         self._detector = detector or build_detector(settings)
-        self._notifier = notifier or build_notifier(settings, self._printer)
+        self._debug_detection = DebugDetectionControl()
+        settings_control = None
+        if isinstance(self._detector, SwitchableDetector):
+            settings_control = SettingsControl(settings, self._detector, config_path)
+        self._notifier = notifier or build_notifier(
+            settings, self._printer, self._debug_detection, settings_control
+        )
         self._loop: MonitorLoop | None = None
 
     async def run_async(self) -> None:
@@ -71,7 +107,11 @@ class Application:
         try:
             await self._notifier.start()
             self._loop = MonitorLoop(
-                self._printer, self._detector, self._notifier, self._settings
+                self._printer,
+                self._detector,
+                self._notifier,
+                self._settings,
+                self._debug_detection,
             )
             await self._loop.run()
         finally:
@@ -112,4 +152,10 @@ class Application:
                 log.debug("Signal handler for %s unavailable on this platform.", name)
 
 
-__all__ = ["Application", "build_detector", "build_notifier", "build_printer"]
+__all__ = [
+    "Application",
+    "build_detector",
+    "build_notifier",
+    "build_printer",
+    "make_detector",
+]

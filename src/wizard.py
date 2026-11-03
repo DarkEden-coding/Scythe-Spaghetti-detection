@@ -51,6 +51,14 @@ def _confidence(text: str) -> float:
     return value
 
 
+def _port(text: str) -> int:
+    """Parse a valid TCP port for the web dashboard."""
+    value = int(text)
+    if not 1 <= value <= 65535:
+        raise ValueError("must be between 1 and 65535")
+    return value
+
+
 def _snowflake(text: str) -> int:
     value = int(text)
     if value <= 0:
@@ -128,6 +136,23 @@ PROMPTS: tuple[tuple[str, tuple[Prompt, ...]], ...] = (
                 _confidence,
                 "Raise it if you get false positives, lower it for false negatives.",
             ),
+        ),
+    ),
+    (
+        "Web dashboard",
+        (
+            Prompt(
+                "web.enabled",
+                "Enable local web dashboard (yes/no)",
+                parse_bool,
+            ),
+            Prompt(
+                "web.host",
+                "Dashboard host",
+                str,
+                "0.0.0.0 makes it reachable from the local network.",
+            ),
+            Prompt("web.port", "Dashboard port", _port),
         ),
     ),
     (

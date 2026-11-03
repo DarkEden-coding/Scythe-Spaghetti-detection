@@ -45,6 +45,31 @@ class StatusUpdate(Event):
     state: PrintState
     image: Image.Image | None = None
     detail: str = ""
+    captured_at: float | None = None
+
+
+@dataclass(frozen=True)
+class FrameCaptured(Event):
+    """A fresh camera frame awaiting inference."""
+
+    uptime_seconds: float
+    state: PrintState
+    image: Image.Image
+    captured_at: float
+
+
+@dataclass(frozen=True)
+class DebugDetection(Event):
+    """A detection produced while idle debug mode is enabled.
+
+    Debug detections are for the local web UI only: they never pause the
+    printer, notify Discord, or wait for operator acknowledgement.
+    """
+
+    result: DetectionResult
+    state: PrintState
+    uptime_seconds: float
+    captured_at: float | None = None
 
 
 @dataclass(frozen=True)
@@ -60,6 +85,7 @@ class SpaghettiDetected(Event):
     paused: bool
     pause_requested: bool
     saved_frame: str = ""
+    captured_at: float | None = None
 
 
 @dataclass(frozen=True)
@@ -79,7 +105,9 @@ class MonitorError(Event):
 
 
 __all__ = [
+    "DebugDetection",
     "Event",
+    "FrameCaptured",
     "ImageUnavailable",
     "MonitorError",
     "MonitoringStarted",

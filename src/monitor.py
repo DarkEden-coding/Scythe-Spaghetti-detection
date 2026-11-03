@@ -17,17 +17,21 @@ import asyncio
 import contextlib
 import logging
 from datetime import datetime, timezone
-from time import monotonic
+from time import monotonic, time
 
 from PIL import Image
 
 from src import paths
 from src.config import Settings
 from src.detection.annotate import draw_boxes
+from src.detection.decision import DecisionDetector
 from src.detection.detector import SpaghettiDetector
 from src.detection.results import DetectionResult
+from src.detection.switchable import SwitchableDetector
 from src.errors import ScytheError
 from src.events import (
+    DebugDetection,
+    FrameCaptured,
     ImageUnavailable,
     MonitorError,
     MonitoringStarted,
@@ -45,25 +49,59 @@ log = logging.getLogger(__name__)
 FAILURE_NOTIFY_INTERVAL = 10
 
 
+class DebugDetectionControl:
+    """Runtime-only switch for running detection while the printer is idle."""
+
+    def __init__(self) -> None:
+        self._enabled = False
+        self._print_active = False
+        self._restore_after_print = False
+
+    @property
+    def enabled(self) -> bool:
+        """Return whether idle debug detection is enabled."""
+        return self._enabled
+
+    def set_enabled(self, enabled: bool) -> None:
+        """Enable or disable idle debug detection until process restart."""
+        self._enabled = enabled
+        self._restore_after_print = False
+
+    def set_print_active(self, active: bool) -> None:
+        """Suspend idle detection for a print and restore it afterward."""
+        if active == self._print_active:
+            return
+        self._print_active = active
+        if active and self._enabled:
+            self._enabled = False
+            self._restore_after_print = True
+        elif not active and self._restore_after_print:
+            self._enabled = True
+            self._restore_after_print = False
+
+
 class MonitorLoop:
     """Polls the printer, runs detection, and emits events."""
 
     def __init__(
         self,
         printer: PrinterClient,
-        detector: SpaghettiDetector,
+        detector: SpaghettiDetector | DecisionDetector | SwitchableDetector,
         notifier: Notifier,
         settings: Settings,
+        debug_detection: DebugDetectionControl | None = None,
     ):
         self._printer = printer
         self._detector = detector
         self._notifier = notifier
         self._settings = settings
+        self._debug_detection = debug_detection or DebugDetectionControl()
 
         self._started_at = monotonic()
         self._stop = asyncio.Event()
         self._image_failures = 0
         self._error_failures = 0
+        self._last_detection_at: float | None = None
 
     # -- control ----------------------------------------------------------- #
 
@@ -84,7 +122,7 @@ class MonitorLoop:
             MonitoringStarted(
                 target_loop_time=self._settings.target_loop_time,
                 printer_url=self._settings.printer.base_url,
-                model_name=self._detector.model_path.name,
+                model_name=self._detector.model_name,
             )
         )
 
@@ -131,6 +169,20 @@ class MonitorLoop:
         with contextlib.suppress(asyncio.TimeoutError):
             await asyncio.wait_for(self._stop.wait(), timeout=remaining)
 
+    def _seconds_until_detection(self) -> float:
+        """How long until detection is due again; ``0`` means run it now.
+
+        Frames arrive every ``target_loop_time`` with some jitter, so a frame
+        that lands up to half an interval early still counts as due. Otherwise
+        a 60 s detection interval on 30 s captures would drift to 90 s.
+        """
+        interval = self._settings.detection.interval
+        if interval <= 0 or self._last_detection_at is None:
+            return 0.0
+        slack = self._settings.target_loop_time / 2
+        remaining = interval - (monotonic() - self._last_detection_at)
+        return remaining if remaining > slack else 0.0
+
     # -- one iteration ----------------------------------------------------- #
 
     async def _tick(self) -> None:
@@ -138,35 +190,88 @@ class MonitorLoop:
         if image is None:
             await self._report_image_failure("Failed to fetch a camera frame.")
             return
+        captured_at = time()
         self._image_failures = 0
 
         state = await asyncio.to_thread(self._printer.get_state)
-        if not state.is_active:
+        self._debug_detection.set_print_active(state.is_active)
+        if not state.is_active and not self._debug_detection.enabled:
             await self._notifier.notify(
                 StatusUpdate(
                     uptime_seconds=self.uptime,
                     state=state,
                     image=image,
                     detail="Idle — detection skipped.",
+                    captured_at=captured_at,
                 )
             )
             return
 
+        wait = self._seconds_until_detection()
+        if wait > 0:
+            await self._notifier.notify(
+                StatusUpdate(
+                    uptime_seconds=self.uptime,
+                    state=state,
+                    image=image,
+                    detail=f"Frame captured; next detection in {wait:.0f}s.",
+                    captured_at=captured_at,
+                )
+            )
+            return
+        self._last_detection_at = monotonic()
+
+        await self._notifier.notify(
+            FrameCaptured(
+                uptime_seconds=self.uptime,
+                state=state,
+                image=image,
+                captured_at=captured_at,
+            )
+        )
         result = await asyncio.to_thread(self._detector.detect, image)
+        if not state.is_active:
+            if result:
+                await self._notifier.notify(
+                    DebugDetection(
+                        result=result,
+                        state=state,
+                        uptime_seconds=self.uptime,
+                        captured_at=captured_at,
+                    )
+                )
+            else:
+                await self._notifier.notify(
+                    StatusUpdate(
+                        uptime_seconds=self.uptime,
+                        state=state,
+                        image=image,
+                        detail=(
+                            "Idle debug detection — no failure "
+                            f"({result.duration_seconds:.1f}s inference)."
+                        ),
+                        captured_at=captured_at,
+                    )
+                )
+            return
+
         if not result:
             await self._notifier.notify(
                 StatusUpdate(
                     uptime_seconds=self.uptime,
                     state=state,
                     image=image,
-                    detail=f"No spaghetti ({result.duration_seconds:.1f}s inference).",
+                    detail=f"No failure ({result.duration_seconds:.1f}s inference).",
+                    captured_at=captured_at,
                 )
             )
             return
 
-        await self._handle_detection(result)
+        await self._handle_detection(result, captured_at)
 
-    async def _handle_detection(self, result: DetectionResult) -> None:
+    async def _handle_detection(
+        self, result: DetectionResult, captured_at: float
+    ) -> None:
         log.warning("Spaghetti detected: %s", result.summary())
 
         pause_requested = self._settings.pause_on_spaghetti
@@ -189,6 +294,7 @@ class MonitorLoop:
                 paused=paused,
                 pause_requested=pause_requested,
                 saved_frame=saved,
+                captured_at=captured_at,
             )
         )
 
@@ -245,4 +351,4 @@ class MonitorLoop:
             log.exception("Failed to deliver %s", type(event).__name__)
 
 
-__all__ = ["MonitorLoop", "PrintState"]
+__all__ = ["DebugDetectionControl", "MonitorLoop", "PrintState"]

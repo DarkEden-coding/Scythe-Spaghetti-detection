@@ -1,0 +1,107 @@
+{
+  "slicer": "OrcaSlicer 2.4.2",
+  "flatpak_branch": "stable",
+  "upstream": "https://github.com/OrcaSlicer/OrcaSlicer/tree/v2.4.2/resources/profiles",
+  "license": "AGPL-3.0",
+  "profiles": {
+    "bambu_x1c_machine.json": {
+      "name": "Bambu Lab X1 Carbon 0.4 nozzle",
+      "inheritance": [
+        "profiles/BBL/machine/fdm_machine_common.json",
+        "profiles/BBL/machine/fdm_bbl_3dp_001_common.json",
+        "profiles/BBL/machine/Bambu Lab X1 Carbon 0.4 nozzle.json"
+      ]
+    },
+    "bambu_x1c_process.json": {
+      "name": "0.20mm Standard @BBL X1C",
+      "inheritance": [
+        "profiles/BBL/process/fdm_process_common.json",
+        "profiles/BBL/process/fdm_process_single_common.json",
+        "profiles/BBL/process/fdm_process_single_0.20.json",
+        "profiles/BBL/process/0.20mm Standard @BBL X1C.json"
+      ]
+    },
+    "bambu_x1c_filament.json": {
+      "name": "Bambu PLA Basic @BBL X1C",
+      "inheritance": [
+        "profiles/BBL/filament/fdm_filament_common.json",
+        "profiles/BBL/filament/fdm_filament_pla.json",
+        "profiles/BBL/filament/Bambu PLA Basic @base.json",
+        "profiles/BBL/filament/Bambu PLA Basic @BBL X1C.json"
+      ]
+    },
+    "bambu_a1mini_machine.json": {
+      "name": "Bambu Lab A1 mini 0.4 nozzle",
+      "inheritance": [
+        "profiles/BBL/machine/fdm_machine_common.json",
+        "profiles/BBL/machine/fdm_bbl_3dp_001_common.json",
+        "profiles/BBL/machine/Bambu Lab A1 mini 0.4 nozzle.json"
+      ]
+    },
+    "bambu_a1mini_process.json": {
+      "name": "0.20mm Standard @BBL A1M",
+      "inheritance": [
+        "profiles/BBL/process/fdm_process_common.json",
+        "profiles/BBL/process/fdm_process_single_common.json",
+        "profiles/BBL/process/fdm_process_single_0.20.json",
+        "profiles/BBL/process/0.20mm Standard @BBL A1M.json"
+      ]
+    },
+    "bambu_a1mini_filament.json": {
+      "name": "Generic PLA @BBL A1M",
+      "inheritance": [
+        "profiles/BBL/filament/fdm_filament_common.json",
+        "profiles/BBL/filament/fdm_filament_pla.json",
+        "profiles/BBL/filament/Generic PLA @base.json",
+        "profiles/BBL/filament/Generic PLA @BBL A1M.json"
+      ]
+    },
+    "prusa_mk4_machine.json": {
+      "name": "Prusa MK4 0.4 nozzle",
+      "inheritance": [
+        "profiles/Prusa/machine/fdm_machine_common.json",
+        "profiles/Prusa/machine/Prusa MK4 0.4 nozzle.json"
+      ]
+    },
+    "prusa_mk4_process.json": {
+      "name": "0.20mm Standard @MK4",
+      "inheritance": [
+        "profiles/Prusa/process/fdm_process_common.json",
+        "profiles/Prusa/process/process_common_mk4.json",
+        "profiles/Prusa/process/0.20mm Standard @MK4.json"
+      ]
+    },
+    "prusa_mk4_filament.json": {
+      "name": "Prusa Generic PLA @MK4",
+      "inheritance": [
+        "profiles/Prusa/filament/fdm_filament_common.json",
+        "profiles/Prusa/filament/fdm_filament_pla.json",
+        "profiles/Prusa/filament/Prusa Generic PLA @MK4.json"
+      ]
+    },
+    "voron24_300_machine.json": {
+      "name": "Voron 2.4 300 0.4 nozzle",
+      "inheritance": [
+        "profiles/Voron/machine/fdm_machine_common.json",
+        "profiles/Voron/machine/fdm_klipper_common.json",
+        "profiles/Voron/machine/Voron 2.4 300 0.4 nozzle.json"
+      ]
+    },
+    "voron24_300_process.json": {
+      "name": "0.20mm Standard @Voron",
+      "inheritance": [
+        "profiles/Voron/process/fdm_process_common.json",
+        "profiles/Voron/process/fdm_process_voron_common.json",
+        "profiles/Voron/process/0.20mm Standard @Voron.json"
+      ]
+    },
+    "voron24_300_filament.json": {
+      "name": "Generic PLA @System",
+      "inheritance": [
+        "profiles/OrcaFilamentLibrary/filament/base/fdm_filament_common.json",
+        "profiles/OrcaFilamentLibrary/filament/base/fdm_filament_pla.json",
+        "profiles/OrcaFilamentLibrary/filament/Generic PLA @System.json"
+      ]
+    }
+  }
+}
