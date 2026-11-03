@@ -63,7 +63,9 @@ sudo_run() {
     if ! sudo -n true 2>/dev/null; then
         bold "Scythe needs sudo to install its service."
     fi
-    sudo "$@" </dev/tty
+    # sudo asks for the password on the terminal itself. Keep stdin away from
+    # the commands: under `curl | bash` it is the rest of this script.
+    sudo "$@" </dev/null
 }
 
 # --------------------------------------------------------------------------- #
