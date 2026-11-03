@@ -25,7 +25,7 @@ dependencies = [
     "discord.py>=2.3,<3",
     "requests>=2.31,<3",
     "urllib3>=1.26,<3",
-    "Pillow>=10.0,<12",
+    "Pillow>=10.0,<14",
     "numpy>=1.24",
     "onnxruntime>=1.16,<2; platform_machine != 'armv7l' and platform_machine != 'armv6l'",
 ]
@@ -39,7 +39,7 @@ train = [
     "roboflow>=1.1,<2",
 ]
 dev = [
-    "pytest>=7.4,<9",
+    "pytest>=7.4,<10",
     "pytest-asyncio>=0.23,<2",
     "ruff>=0.4,<1",
 ]
