@@ -530,7 +530,7 @@ a:focus-visible {
 .setup-step h3 { margin: 4px 0 8px; font-size: 15px; font-weight: 650; }
 .setup-step h3 small { color: var(--muted); font-weight: 400; }
 .setup-step > p { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.5; }
-.setup-step > .button { margin-bottom: 4px; }
+.setup-step > .button { height: 34px; margin-bottom: 4px; padding: 0 14px; }
 
 .setup-progress {
   display: flex;
