@@ -96,6 +96,13 @@ class TestUpdate:
         assert "secret-token" not in json.dumps(public)
         assert json.loads(config_file.read_text())["discord"]["log_channel_id"] == 123
 
+    async def test_discord_ids_round_trip_as_strings(self, control, settings):
+        settings.discord.ping_user_id = 806281289040396288
+        public = control.public()
+        assert public["values"]["discord_user_id"] == "806281289040396288"
+        await control.update({"discord_user_id": public["values"]["discord_user_id"]})
+        assert settings.discord.ping_user_id == 806281289040396288
+
     async def test_interval_change_does_not_rebuild_detector(self, control, settings):
         before = control._detector.current
         await control.update({"capture_interval": 20})
