@@ -10,7 +10,7 @@ Scythe watches your 3D printer's camera and pauses the print when it fails. It r
 - **Remote access through Tailscale**, set up from the dashboard, with no ports opened.
 - **Mainsail sidebar link**, so Scythe opens inside your printer's address.
 
-This is a student project in alpha. If something breaks, please [open an issue](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/issues).
+Hello, thanks for checking out my project! Scythe is a simple, lightweight, open source and self-hosted 3D printer failure detector, written entirely in Python. It's still in its early stages, so keep that in mind before trusting it with a long print. If you find any issues, please [open an issue](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/issues) or a pull request, and any showcase of how you're using it would be greatly appreciated; you can reach me using the info below. If master ever has broken code, I deeply apologize: I'm still fairly new to the open source community, so please contact me as soon as possible!
 
 ## Install
 
