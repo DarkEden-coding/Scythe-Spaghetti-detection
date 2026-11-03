@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0a0b0d">
   <title>Scythe — Printer Monitor</title>
-  <link rel="icon" type="image/svg+xml" href="/logo.svg">
-  <link rel="stylesheet" href="/style.css?v=6">
-  <script src="/app.js?v=5" defer></script>
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="stylesheet" href="style.css?v=7">
+  <script src="app.js?v=6" defer></script>
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="Scythe dashboard">
-      <img class="brand-mark" src="/logo.svg" alt="">
+    <a class="brand" href="./" aria-label="Scythe dashboard">
+      <img class="brand-mark" src="logo.svg" alt="">
       <span>Scythe</span>
     </a>
     <span class="status-pill" id="printer-pill"><i></i><span id="printer-state">Connecting</span></span>
@@ -188,24 +188,24 @@
       <section class="guide-step">
         <h3>1. Create a bot and copy its token</h3>
         <p>Open the <a href="https://discord.com/developers/applications" target="_blank" rel="noopener">Discord Developer Portal</a>, click <b>New Application</b> and name it “Scythe”. Go to <b>Bot</b>, click <b>Reset Token</b>, then <b>Copy</b>. Paste it into <b>Bot token</b> in Settings.</p>
-        <img src="/discord-guide/bot-token.svg" alt="Developer Portal Bot page with the Reset Token and Copy buttons highlighted">
+        <img src="discord-guide/bot-token.svg" alt="Developer Portal Bot page with the Reset Token and Copy buttons highlighted">
         <p class="guide-note">Treat the token like a password. Anyone who has it can control the bot.</p>
       </section>
       <section class="guide-step" hidden>
         <h3>2. Invite the bot to your server</h3>
         <p id="invite-text">Paste the token in Settings first; an invite link with the right permissions will appear here. Otherwise use <b>OAuth2 → URL Generator</b> with the <b>bot</b> and <b>applications.commands</b> scopes.</p>
         <a class="button button-primary guide-invite" id="invite-link" target="_blank" rel="noopener" hidden>Open invite link</a>
-        <img src="/discord-guide/invite.svg" alt="Discord authorize screen with the server picker highlighted">
+        <img src="discord-guide/invite.svg" alt="Discord authorize screen with the server picker highlighted">
       </section>
       <section class="guide-step" hidden>
         <h3>3. Turn on Developer Mode</h3>
         <p>In Discord, open <b>User Settings → Advanced</b> and switch on <b>Developer Mode</b>. This adds “Copy ID” to right-click menus.</p>
-        <img src="/discord-guide/developer-mode.svg" alt="Discord Advanced settings with the Developer Mode switch highlighted">
+        <img src="discord-guide/developer-mode.svg" alt="Discord Advanced settings with the Developer Mode switch highlighted">
       </section>
       <section class="guide-step" hidden>
         <h3>4. Copy the channel and user IDs</h3>
         <p>Right-click the channel for alerts and choose <b>Copy Channel ID</b>. Then right-click your own name and choose <b>Copy User ID</b>. Paste both into Settings, save, and restart when asked.</p>
-        <img src="/discord-guide/copy-ids.svg" alt="Right-click menus with Copy Channel ID and Copy User ID highlighted">
+        <img src="discord-guide/copy-ids.svg" alt="Right-click menus with Copy Channel ID and Copy User ID highlighted">
         <p class="guide-note">Only this user can run the bot’s slash commands, such as /pause.</p>
       </section>
     </div>
@@ -224,7 +224,7 @@
   <main class="layout">
     <section class="camera" id="camera-stage" aria-label="Latest camera frame">
       <div class="camera-empty" id="camera-empty">Waiting for the first camera frame…</div>
-      <img id="camera-image" src="/api/frame.jpg" alt="Latest printer camera frame" hidden>
+      <img id="camera-image" src="api/frame.jpg" alt="Latest printer camera frame" hidden>
       <svg class="detection-overlay" id="detection-overlay" aria-hidden="true"></svg>
       <div class="frame-chip" id="frame-chip" hidden></div>
       <button class="icon-button" id="overlay-toggle" type="button" aria-pressed="true" aria-label="Show detection boxes" title="Show detection boxes">

@@ -287,7 +287,7 @@ class WebNotifier(BaseNotifier):
 
         self._frame = await asyncio.to_thread(encode)
         self._frame_meta = {
-            "url": f"/api/frame.jpg?v={self._revision}",
+            "url": f"api/frame.jpg?v={self._revision}",
             "captured_at": captured_at if captured_at is not None else time(),
             "width": image.width,
             "height": image.height,

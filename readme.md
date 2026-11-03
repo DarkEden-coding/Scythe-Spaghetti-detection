@@ -175,6 +175,23 @@ journalctl -u scythe -f
 ```
 Logs are also written to `data/scythe.log`.
 
+## Opening Scythe from Mainsail:
+Mainsail has no plugin system, but it can add links to its sidebar. Both steps below live outside Mainsail's own files, so Mainsail updates leave them alone.
+
+1. Serve the dashboard under `/scythe/` on Mainsail's address. In `/etc/nginx/sites-available/mainsail`, add this inside the `server { ... }` block, then run `sudo systemctl reload nginx`:
+   ```nginx
+   location /scythe/ {
+       proxy_pass http://127.0.0.1:8090/;
+       proxy_buffering off;
+   }
+   ```
+   Change `8090` if you set a different dashboard port.
+2. Create `~/printer_data/config/.theme/navi.json`:
+   ```json
+   [{"title": "Scythe", "href": "/scythe/", "target": "_self", "position": 85}]
+   ```
+   Reload Mainsail and Scythe appears in the sidebar. Clicking the Scythe logo goes back to Mainsail.
+
 ## Discord Message UI:
 ### status:
 ![Alt text](https://github.com/DarkEden-coding/Scythe-Spaghetti-detection/blob/master/readme_images/status.png?raw=true "Status Message")

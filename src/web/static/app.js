@@ -221,7 +221,7 @@ function updateCountdown() {
 
 async function fetchState() {
   try {
-    const response = await fetch("/api/state", { cache: "no-store" });
+    const response = await fetch("api/state", { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     render(await response.json());
     schedulePoll(2000);
@@ -282,23 +282,23 @@ async function control(path, button, successMessage, failureMessage, body = null
 }
 
 elements["pause-button"].addEventListener("click", () => control(
-  "/api/pause", elements["pause-button"], "Printer paused.",
+  "api/pause", elements["pause-button"], "Printer paused.",
   "The printer was not printing or could not be paused."
 ));
 elements["resume-button"].addEventListener("click", () => control(
-  "/api/resume", elements["resume-button"], "Printer resumed.",
+  "api/resume", elements["resume-button"], "Printer resumed.",
   "The printer was not paused or could not be resumed."
 ));
 elements["debug-detection-button"].addEventListener("click", () => {
   const enabled = !Boolean(state?.debug_detection_enabled);
   control(
-    "/api/debug-detection", elements["debug-detection-button"],
+    "api/debug-detection", elements["debug-detection-button"],
     `Idle detection ${enabled ? "enabled" : "disabled"}.`,
     "Could not change idle detection mode.", { enabled }
   );
 });
 elements["acknowledge-button"].addEventListener("click", () => control(
-  "/api/acknowledge", elements["acknowledge-button"], "Alert dismissed. Monitoring continues.",
+  "api/acknowledge", elements["acknowledge-button"], "Alert dismissed. Monitoring continues.",
   "No detection is waiting for acknowledgement."
 ));
 elements["overlay-toggle"].addEventListener("click", () => {
@@ -470,7 +470,7 @@ function fillSettings(data) {
 async function openSettings() {
   settingsUi["settings-error"].textContent = "";
   try {
-    const response = await fetch("/api/settings", { cache: "no-store" });
+    const response = await fetch("api/settings", { cache: "no-store" });
     if (!response.ok) throw new Error(await response.text());
     fillSettings(await response.json());
   } catch (error) {
@@ -513,7 +513,7 @@ async function saveSettings(event) {
   save.textContent = "Saving…";
   settingsUi["settings-error"].textContent = "";
   try {
-    const response = await fetch("/api/settings", {
+    const response = await fetch("api/settings", {
       method: "POST",
       headers: { "X-Scythe-Request": "1", "Content-Type": "application/json" },
       body: JSON.stringify(collectSettings()),
@@ -634,17 +634,17 @@ settingsUi["restart-button"].addEventListener("click", async () => {
   button.disabled = true;
   button.textContent = "Restarting…";
   try {
-    await fetch("/api/restart", { method: "POST", headers: { "X-Scythe-Request": "1" } });
+    await fetch("api/restart", { method: "POST", headers: { "X-Scythe-Request": "1" } });
   } catch { /* the connection drops as the process restarts */ }
   // Reload once the dashboard answers again.
   const poll = setInterval(async () => {
     try {
-      if ((await fetch("/api/healthz", { cache: "no-store" })).ok) location.reload();
+      if ((await fetch("api/healthz", { cache: "no-store" })).ok) location.reload();
     } catch { /* still restarting */ }
   }, 1500);
   setTimeout(() => clearInterval(poll), 60000);
 });
-fetch("/api/settings", { cache: "no-store" })
+fetch("api/settings", { cache: "no-store" })
   .then((response) => (response.ok ? response.json() : null))
   .then((data) => { if (data) fillSettings(data); })
   .catch(() => {});
