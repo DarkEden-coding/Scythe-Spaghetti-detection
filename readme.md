@@ -1,6 +1,6 @@
-# Scythe
+# Scythe-Spaghetti-Detection
 
-Scythe watches your 3D printer's camera and pauses the print when it fails. It runs on your own hardware, next to Klipper, and works with any printer that Moonraker drives.
+Scythe-Spaghetti-Detection watches your 3D printer's camera and pauses the print when it fails. It runs on your own hardware, next to Klipper, and works with any printer that Moonraker drives.
 
 ![The setup wizard finding a printer and showing a test frame](readme_images/setup.png)
 
