@@ -30,7 +30,6 @@ UNINSTALL=0
 PURGE=0
 
 bold() { printf '\033[1m%s\033[0m\n' "$*"; }
-step() { printf '\n\033[1;33m==>\033[0m \033[1m%s\033[0m\n' "$*"; }
 warn() { printf '\033[1;33mWarning:\033[0m %s\n' "$*" >&2; }
 die() { printf '\033[1;31mError:\033[0m %s\n' "$*" >&2; exit 1; }
 
@@ -58,6 +57,88 @@ if [[ -z "$DIR" ]]; then
     fi
 fi
 DIR="$(realpath -m "$DIR")"
+
+# --------------------------------------------------------------------------- #
+# Progress output
+# --------------------------------------------------------------------------- #
+
+STEP=0
+TOTAL_STEPS=0
+LOG="$(mktemp -t scythe-install.XXXXXX.log)"
+TTY=0
+[[ -t 1 ]] && TTY=1
+SPINNER='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+trap '((TTY)) && printf "\033[?25h"; true' EXIT
+
+# bar DONE TOTAL WIDTH: a bar like ██████░░░░.
+bar() {
+    local filled=0 out="" i
+    (($2 > 0)) && filled=$(($1 * $3 / $2))
+    ((filled > $3)) && filled=$3
+    for ((i = 0; i < $3; i++)); do
+        if ((i < filled)); then out+="█"; else out+="░"; fi
+    done
+    printf '%s' "$out"
+}
+
+# A numbered step header with the overall progress bar.
+step() {
+    if ((TOTAL_STEPS)); then
+        STEP=$((STEP + 1))
+        printf '\n\033[1;33m[%s] %d/%d\033[0m \033[1m%s\033[0m\n' \
+            "$(bar $((STEP - 1)) "$TOTAL_STEPS" 20)" "$STEP" "$TOTAL_STEPS" "$*"
+    else
+        printf '\n\033[1;33m==>\033[0m \033[1m%s\033[0m\n' "$*"
+    fi
+}
+
+done_line() { printf '  \033[32m✓\033[0m %s\n' "$*"; }
+
+# run_task LABEL CMD...: run CMD with its output going to $LOG, and show a
+# spinner with the elapsed time so a slow step never looks stalled. If
+# PROGRESS_FN names a function, its output (e.g. "42% 73/175 MB") is shown
+# next to the label. On failure, print the end of the log and exit.
+run_task() {
+    local label="$1" pid start elapsed frame=0 extra last_note=0 log_start
+    shift
+    printf '\n--- %s\n' "$label" >>"$LOG"
+    log_start=$(wc -l <"$LOG")
+    "$@" >>"$LOG" 2>&1 </dev/null &
+    pid=$!
+    start=$SECONDS
+    if ((TTY)); then printf '\033[?25l'; else printf '  %s...\n' "$label"; fi
+    while kill -0 "$pid" 2>/dev/null; do
+        elapsed=$((SECONDS - start))
+        extra=""
+        if [[ -n "${PROGRESS_FN:-}" ]]; then extra="$("$PROGRESS_FN" 2>/dev/null || true)"; fi
+        if ((TTY)); then
+            printf '\r\033[K  \033[36m%s\033[0m %s %s\033[2m(%ds)\033[0m' \
+                "${SPINNER:frame++%${#SPINNER}:1}" "$label" "${extra:+$extra }" "$elapsed"
+        elif ((elapsed - last_note >= 15)); then
+            last_note=$elapsed
+            printf '  ... still working (%ds) %s\n' "$elapsed" "$extra"
+        fi
+        # Keep the sudo timestamp fresh through long steps.
+        sudo -n -v 2>/dev/null || true
+        sleep 0.2
+    done
+    elapsed=$((SECONDS - start))
+    if ((TTY)); then printf '\r\033[K\033[?25h'; fi
+    if wait "$pid"; then
+        printf '  \033[32m✓\033[0m %s \033[2m(%ds)\033[0m\n' "$label" "$elapsed"
+    else
+        printf '  \033[31m✗\033[0m %s \033[2m(%ds)\033[0m\n' "$label" "$elapsed"
+        echo "Last lines of the log ($LOG):" >&2
+        tail -n +"$((log_start + 1))" "$LOG" | tail -n 25 | sed 's/^/    /' >&2
+        exit 1
+    fi
+}
+
+# Ask for the sudo password now if needed; a prompt hidden behind a spinner
+# would look like a stall.
+ensure_sudo() {
+    sudo -n true 2>/dev/null || sudo_run -v
+}
 
 sudo_run() {
     if ! sudo -n true 2>/dev/null; then
@@ -126,6 +207,16 @@ fi
 # Install
 # --------------------------------------------------------------------------- #
 
+case "$(uname -m)" in
+    aarch64|x86_64|amd64) LOCAL_MODEL=1 ;;
+    *) LOCAL_MODEL=0
+       warn "This is a 32-bit system, so the local model can't run here. Scythe will use an AI decision model (OpenRouter) instead." ;;
+esac
+ON_KLIPPER=0
+[[ -f "$MOONRAKER_CONF" ]] && ON_KLIPPER=1
+TOTAL_STEPS=$((6 + LOCAL_MODEL + ON_KLIPPER))
+ensure_sudo
+
 step "Checking prerequisites"
 missing=()
 for tool in git curl; do
@@ -133,27 +224,30 @@ for tool in git curl; do
 done
 if ((${#missing[@]})); then
     command -v apt-get >/dev/null || die "Please install: ${missing[*]}"
-    sudo_run apt-get update -qq
-    sudo_run apt-get install -y -qq "${missing[@]}"
+    run_task "Updating package lists" sudo apt-get update -qq
+    run_task "Installing ${missing[*]}" sudo apt-get install -y -qq "${missing[@]}"
 fi
 
 export PATH="$HOME/.local/bin:$PATH"
 if ! command -v uv >/dev/null; then
-    echo "Installing uv (Python package manager)..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh >/dev/null
+    run_task "Installing uv (Python package manager)" \
+        sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
 fi
 command -v uv >/dev/null || die "uv did not install. See https://docs.astral.sh/uv/."
+done_line "git, curl and uv are ready"
 
-case "$(uname -m)" in
-    aarch64|x86_64|amd64) LOCAL_MODEL=1 ;;
-    *) LOCAL_MODEL=0
-       warn "This is a 32-bit system, so the local model can't run here. Scythe will use an AI decision model (OpenRouter) instead." ;;
-esac
+# Write the newest vX.Y.Z tag (or nothing) to the file $1.
+latest_release() {
+    git ls-remote --tags --refs "$REPO" 'v*' | sed 's#.*refs/tags/##' \
+        | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 >"$1" || true
+}
 
 step "Downloading Scythe"
 if [[ -z "$REF" ]]; then
-    REF="$(git ls-remote --tags --refs "$REPO" 'v*' | sed 's#.*refs/tags/##' \
-        | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
+    ref_file="$(mktemp)"
+    run_task "Finding the newest release" latest_release "$ref_file"
+    REF="$(cat "$ref_file")"
+    rm -f "$ref_file"
     if [[ -z "$REF" ]]; then
         warn "No release has been published yet; installing the $PRIMARY_BRANCH branch."
         REF="$PRIMARY_BRANCH"
@@ -164,10 +258,10 @@ if [[ -d "$DIR/.git" ]]; then
     if [[ -n "$(git -C "$DIR" status --porcelain --untracked-files=no)" ]]; then
         die "$DIR has local changes. Commit or discard them, then run the installer again."
     fi
-    git -C "$DIR" fetch --quiet --tags --force origin
+    run_task "Fetching updates" git -C "$DIR" fetch --tags --force origin
 else
     [[ ! -e "$DIR" ]] || die "$DIR exists but isn't a Scythe checkout. Choose another with --dir."
-    git clone --quiet "$REPO" "$DIR"
+    run_task "Cloning the repository" git clone --progress "$REPO" "$DIR"
 fi
 
 cd "$DIR"
@@ -176,27 +270,44 @@ if git rev-parse --quiet --verify "refs/tags/$REF" >/dev/null; then
     # update manager expects a branch, and moves it to newer tags.
     git checkout --quiet -B "$PRIMARY_BRANCH" "refs/tags/$REF"
     git branch --quiet --set-upstream-to "origin/$PRIMARY_BRANCH" "$PRIMARY_BRANCH"
-    echo "Installing release $REF."
+    done_line "Release $REF"
 elif git rev-parse --quiet --verify "refs/remotes/origin/$REF" >/dev/null; then
     git checkout --quiet -B "$REF" "origin/$REF"
     git branch --quiet --set-upstream-to "origin/$REF" "$REF"
-    echo "Installing branch $REF ($(git rev-parse --short HEAD))."
+    done_line "Branch $REF ($(git rev-parse --short HEAD))"
 else
     die "No branch or tag called $REF."
 fi
 
 step "Installing Python and dependencies"
 if [[ ! -x .venv/bin/python ]]; then
-    uv venv --quiet --seed --python 3.11 .venv
+    run_task "Setting up Python 3.11" uv venv --seed --python 3.11 .venv
 fi
 # Moonraker's update manager installs requirements with the venv's own pip.
-uv pip install --quiet --python .venv/bin/python --index-strategy unsafe-best-match \
+run_task "Installing dependencies (the slowest step on a Pi)" \
+    uv pip install --python .venv/bin/python --index-strategy unsafe-best-match \
     pip -r requirements.txt
 
 if ((LOCAL_MODEL)); then
     step "Downloading the detection model (175 MB)"
-    .venv/bin/python -m src download-model
+    MODEL_PATH="$(.venv/bin/python -c 'from src.config import load_settings; print(load_settings(validate=False).detection.model_path)')"
+    MODEL_URL="$(.venv/bin/python -c 'from src.detection.model_download import MODEL_URL; print(MODEL_URL)')"
+    MODEL_BYTES="$(curl -fsSIL "$MODEL_URL" 2>/dev/null | tr -d '\r' \
+        | awk 'tolower($1) == "content-length:" { n = $2 } END { print n + 0 }')"
+    model_progress() {
+        local have
+        have="$(stat -c %s "$MODEL_PATH.part" 2>/dev/null || stat -c %s "$MODEL_PATH" 2>/dev/null || echo 0)"
+        if ((MODEL_BYTES > 0)); then
+            printf '%s %3d%% %d/%d MB' "$(bar "$have" "$MODEL_BYTES" 15)" \
+                $((have * 100 / MODEL_BYTES)) $((have >> 20)) $((MODEL_BYTES >> 20))
+        else
+            printf '%d MB' $((have >> 20))
+        fi
+    }
+    PROGRESS_FN=model_progress run_task "Downloading" .venv/bin/python -m src download-model
 fi
+
+step "Configuring Scythe"
 
 # Pick the dashboard port: keep a configured one, else the first free port.
 current_port="$(.venv/bin/python - <<'EOF'
@@ -215,9 +326,6 @@ if [[ -z "$PORT" ]]; then
     done
 fi
 
-ON_KLIPPER=0
-[[ -f "$MOONRAKER_CONF" ]] && ON_KLIPPER=1
-
 .venv/bin/python - "$PORT" "$ON_KLIPPER" "$LOCAL_MODEL" <<'EOF'
 import sys
 from src import paths
@@ -231,8 +339,10 @@ if not paths.config_path().exists():
         changes["detection"] = {"backend": "decision"}
 save_overrides(changes)
 EOF
+done_line "Dashboard port $PORT"
 
 step "Installing the service"
+ensure_sudo
 tmp_unit="$(mktemp)"
 sed -e "s#@USER@#$USER#g" -e "s#@DIR@#$DIR#g" deploy/scythe.service > "$tmp_unit"
 sudo_run install -m 644 "$tmp_unit" "/etc/systemd/system/$SERVICE.service"
@@ -253,7 +363,7 @@ rm -f "$tmp_sudoers"
 
 sudo_run systemctl daemon-reload
 sudo_run systemctl enable --quiet "$SERVICE"
-sudo_run systemctl restart "$SERVICE"
+done_line "Service installed"
 
 if ((ON_KLIPPER)); then
     step "Registering with Moonraker's update manager"
@@ -278,17 +388,28 @@ EOF
         [[ -z "$(tail -c 1 "$MOONRAKER_ASVC")" ]] || echo >> "$MOONRAKER_ASVC"
         echo "$SERVICE" >> "$MOONRAKER_ASVC"
     fi
-    sudo_run systemctl restart moonraker || warn "Restart Moonraker to see Scythe in the Update panel."
-    echo "Scythe now updates from the Update panel in Mainsail or Fluidd."
+    ensure_sudo
+    ( run_task "Restarting Moonraker" sudo systemctl restart moonraker ) \
+        || warn "Restart Moonraker to see Scythe in the Update panel."
+    done_line "Scythe now updates from the Update panel in Mainsail or Fluidd"
 fi
 
-# Wait for the dashboard to answer.
-for _ in $(seq 30); do
-    curl -fs "http://127.0.0.1:$PORT/api/healthz" >/dev/null 2>&1 && break
-    sleep 1
-done
+# Wait up to 30 s for the dashboard. Never fails: a warning below covers it.
+wait_for_dashboard() {
+    for _ in $(seq 30); do
+        curl -fs "http://127.0.0.1:$PORT/api/healthz" >/dev/null 2>&1 && return 0
+        sleep 1
+    done
+    return 0
+}
 
-step "Done"
+step "Starting Scythe"
+ensure_sudo
+run_task "Starting the service" sudo systemctl restart "$SERVICE"
+run_task "Waiting for the dashboard" wait_for_dashboard
+rm -f "$LOG"
+
+printf '\n\033[1;32m[%s] Done\033[0m\n' "$(bar 1 1 20)"
 bold "Open the setup in your browser:"
 for ip in $(hostname -I 2>/dev/null); do
     [[ "$ip" == *:* ]] && continue  # skip IPv6
