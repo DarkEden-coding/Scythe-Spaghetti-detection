@@ -53,7 +53,7 @@ class WebAcknowledgement:
         """Wait until acknowledged, or return false after a configured timeout."""
         try:
             await asyncio.wait_for(self._event.wait(), timeout=timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return False
         return True
 

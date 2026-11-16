@@ -15,7 +15,7 @@ import logging
 import os
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from src.config import load_settings
@@ -83,7 +83,7 @@ def main(argv: list[str] | None = None) -> int:
                 if image is None:
                     log.warning("No frame available; retrying.")
                 else:
-                    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+                    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
                     target = args.output / f"{stamp}.jpg"
                     image.convert("RGB").save(target, quality=90)
                     captured += 1
