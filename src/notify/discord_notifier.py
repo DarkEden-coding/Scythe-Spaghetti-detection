@@ -71,7 +71,7 @@ class DiscordAcknowledgement:
             await self._client.wait_for(
                 "reaction_add", check=self._check, timeout=timeout or None
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             log.warning("Acknowledgement timed out after %ss; resuming.", timeout)
             return False
         log.info("Acknowledged; resuming detection.")

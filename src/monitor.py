@@ -16,7 +16,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from time import monotonic, time
 
 from PIL import Image
@@ -313,7 +313,7 @@ class MonitorLoop:
         """Persist an annotated failure frame for post-mortem debugging."""
         directory = paths.ensure_data_dir() / "detections"
         directory.mkdir(parents=True, exist_ok=True)
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         target = directory / f"spaghetti-{stamp}.jpg"
         image.convert("RGB").save(target, format="JPEG", quality=90)
         log.info("Saved annotated frame to %s", target)
